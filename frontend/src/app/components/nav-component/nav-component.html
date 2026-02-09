@@ -1,0 +1,60 @@
+<nav class="navbar">
+    <!-- Logo -->
+    <div class="navbar-left">
+        <div class="logo">
+            <a href="#" class="nav-link">
+                <img src="/assets/Favicon.png" alt="Logo" class="logo-img">
+            </a>
+        </div>
+
+        <!-- Elementos Barra -->
+        <div class="nav-items">
+            <a href="#" (click)="setActiveLink(0); $event.preventDefault()" [class.active]="activeLink === 0"
+                class="nav-link">
+                <i class="fas fa-home"></i>
+                <span>Inicio</span>
+            </a>
+            <a href="#" (click)="setActiveLink(1); $event.preventDefault()" [class.active]="activeLink === 1"
+                class="nav-link">
+                <i class="fas fa-building"></i>
+                <span>Unidades</span>
+            </a>
+            <a href="#" (click)="setActiveLink(2); $event.preventDefault()" [class.active]="activeLink === 2"
+                class="nav-link">
+                <i class="fas fa-cogs"></i>
+                <span>Códigos</span>
+            </a>
+            <a href="#" (click)="setActiveLink(3); $event.preventDefault()" [class.active]="activeLink === 3"
+                class="nav-link">
+                <i class="fas fa-sitemap"></i>
+                <span>Departamentos</span>
+            </a>
+            <a href="#" (click)="setActiveLink(4); $event.preventDefault()" [class.active]="activeLink === 4"
+                class="nav-link">
+                <i class="fas fa-users"></i>
+                <span>Usuarios</span>
+            </a>
+            <a href="#" (click)="setActiveLink(5); $event.preventDefault()" [class.active]="activeLink === 5"
+                class="nav-link">
+                <i class="fas fa-chart-bar"></i>
+                <span>Actividades</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Usuario -->
+    <div class="navbar-right">
+        <div class="user-dropdown" [class.open]="dropdownOpen">
+            <button class="user-button" (click)="toggleDropdown()">
+                <i class="fas fa-user-circle"></i>
+                <span class="dropdown-icon">▼</span>
+            </button>
+            <div class="dropdown-menu">               
+                <a href="#" class="dropdown-item" (click)="closeDropdown(); $event.preventDefault()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
