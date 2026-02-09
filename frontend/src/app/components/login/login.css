@@ -1,33 +1,21 @@
-
-
 .login-container {
   display: flex;
-  height: 98vh;
+  height: 100vh;
 }
 
 /* Sección izquierda */
 .image-section {
-  flex: 1;
-  background-image: url('https://gestion.santototunja.edu.co/wp-content/uploads/2021/06/Santoto_Tunja_Produccion_fotografica_21.jpeg');
+  flex: 1.5;
+  background-image: url('/assets/Login.jpg');
   background-size: cover;
   background-position: center;
   position: relative;
 }
 
-.image-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(26, 58, 82, 0.4);
-}
-
 
 /* Sección derecha */
 .form-section {
-  flex: 1;
+  flex: 1.2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -37,11 +25,11 @@
 
 .form-content {
   width: 100%;
-  max-width: 450px;
+  max-width: 380px;
   background-color: white;
-  padding: 50px 40px;
+  padding: 40px 35px;
   border-radius: 16px;
-  border-top: 4px solid #d4a574;
+  border-top: 4px solid #00D4D4;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
@@ -51,24 +39,10 @@
   margin-bottom: 30px;
 }
 
-.logo-circle {
-  width: 90px;
-  height: 90px;
-  background-image: url('https://www.santototunja.edu.co/images/01-USTATunja/01-USTA-Tunja-Imagenes/escudo.gif');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-color: #1a3a52;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.logo-circle img {
-  width: 70%;
-  height: 70%;
+.logo-img {
+  width: 220px;
+  height: auto;
+  max-width: 100%;
   object-fit: contain;
 }
 
@@ -76,15 +50,8 @@
   font-size: 24px;
   color: #1a1a1a;
   text-align: center;
-  margin-bottom: 8px;
+  margin-bottom: 40px;
   font-weight: 600;
-}
-
-.subtitle {
-  color: #666;
-  text-align: center;
-  margin-bottom: 35px;
-  font-size: 14px;
 }
 
 .login-form {
@@ -102,21 +69,27 @@
   font-size: 14px;
   font-weight: 500;
   margin-bottom: 8px;
+  max-width: 350px;
+  margin-left: 30px;
+  margin-right: auto;
 }
 
 .input-container {
   position: relative;
   display: flex;
   align-items: center;
-  border: 1px solid #d0d0d0;
-  border-radius: 8px;
+  border: 2px solid #d0d0d0;
+  border-radius: 25px;
   background-color: #fafafa;
-  transition: border-color 0.3s ease;
+  transition: all 0.3s ease;
+  max-width: 350px;
+  margin: 0 auto;
 }
 
 .input-container:focus-within {
-  border-color: #1a3a52;
+  border-color: #00D4D4;
   background-color: white;
+  box-shadow: 0 0 0 3px rgba(0, 212, 212, 0.1);
 }
 
 .input-icon {
@@ -129,11 +102,12 @@
 
 .input-container input {
   flex: 1;
-  padding: 12px 0;
+  padding: 12px 12px;
   border: none;
   background: transparent;
   font-size: 14px;
   color: #333;
+  outline: none;
 }
 
 .input-container input::placeholder {
@@ -141,7 +115,7 @@
 }
 
 .forgot-password {
-  text-align: right;
+  text-align: center;
   margin-bottom: 28px;
 }
 
@@ -157,20 +131,24 @@
 }
 
 .btn-login {
-  padding: 14px;
+  padding: 12px 32px;
   background-color: #1a3a52;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 25px;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.3s ease;
   margin-bottom: 20px;
+  max-width: 200px;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
 }
 
 .btn-login:hover {
-  background-color: #0f2332;
+  background-color: #2d5a7a;
 }
 
 .btn-login:active {
