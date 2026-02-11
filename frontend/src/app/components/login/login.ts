@@ -21,33 +21,40 @@ export class Login {
     private router: Router
   ) {}
 
-  onSubmit(): void {
-    this.errorMessage = '';
-    this.isLoading = true;
+onSubmit(): void {
+  this.errorMessage = '';
 
-    if (!this.email || !this.password) {
-      this.errorMessage = 'Por favor ingrese email y contraseña';
-      this.isLoading = false;
-      return;
-    }
+  if (!this.email?.trim() || !this.password?.trim()) {
+    this.errorMessage = 'Por favor ingrese email y contraseña';
+    return;
+  }
 
-    this.auth.login(this.email, this.password).subscribe({
+  this.isLoading = true;
+
+  this.auth.login(this.email.trim(), this.password.trim())
+    .subscribe({
       next: (response) => {
         this.isLoading = false;
-        if (response.status === 'error') {
-          this.errorMessage = response.mensaje;
+
+        if (response.status !== 'success') {
+          this.errorMessage = response.mensaje || 'Credenciales inválidas';
         }
-        // La redirección se maneja en el servicio
+        // La redirección la hace el servicio
       },
       error: (error) => {
         this.isLoading = false;
-        if (error.error && error.error.detail && error.error.detail.mensaje) {
-          this.errorMessage = error.error.detail.mensaje;
+
+        if (error.status === 401) {
+          this.errorMessage = 'Correo o contraseña incorrectos';
+        } else if (error.status === 0) {
+          this.errorMessage = 'No se puede conectar con el servidor';
         } else {
-          this.errorMessage = 'Error de conexión. Intente nuevamente.';
+          this.errorMessage = 'Ocurrió un error inesperado';
         }
+
         console.error('Error en login:', error);
       }
     });
-  }
+}
+
 }

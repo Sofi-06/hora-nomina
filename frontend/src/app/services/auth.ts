@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 
+
 export interface Usuario {
   id: number;
   name: string;
@@ -62,6 +63,7 @@ export class Auth {
             observer.error(error);
           }
         });
+        
     });
   }
 

@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import sys
 import os
+import bcrypt
 
 # Agregar el directorio padre al path para poder importar baseDatos
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,38 +20,47 @@ class AuthResponse(BaseModel):
     mensaje: str
     usuario: dict = None
     
+import bcrypt
+
 def verificar_login(email: str, password: str):
-    """
-    Verifica las credenciales del usuario y retorna sus datos incluyendo el rol
-    """
     conexion = None
     try:
         conexion = get_database_connection()
-        if not conexion:
-            print("No se pudo establecer conexión a la base de datos")
-            return None
-            
         cursor = conexion.cursor(dictionary=True)
+
         query = """
-            SELECT id, name, email, role, password 
-            FROM users 
-            WHERE email = %s AND password = %s
+            SELECT id, name, email, user_type as role, password
+            FROM users
+            WHERE email = %s
         """
-        cursor.execute(query, (email, password))
+        cursor.execute(query, (email,))
         usuario = cursor.fetchone()
+
         cursor.close()
-        
-        if usuario:
-            # No retornar la contraseña al frontend
-            del usuario['password']
+
+        if not usuario:
+            print("❌ Usuario no encontrado")
+            return None
+
+        hash_bd = usuario["password"].encode("utf-8")
+        password_ingresada = password.encode("utf-8")
+
+        # 🔥 AQUÍ está la validación real
+        if bcrypt.checkpw(password_ingresada, hash_bd):
+            print("✅ Password correcta")
+            del usuario["password"]
             return usuario
-        return None
+        else:
+            print("❌ Password incorrecta")
+            return None
+
     except Exception as e:
-        print(f"Error en verificar_login: {e}")
+        print("ERROR LOGIN:", e)
         return None
     finally:
         if conexion:
             conexion.close()
+
     
 @router.post("/", response_model=AuthResponse)
 def login(auth: Auth):
