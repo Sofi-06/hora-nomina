@@ -47,8 +47,16 @@
           {{ errorMessage }}
         </div>
 
-        <button type="submit" class="btn-login" [disabled]="isLoading">
-          {{ isLoading ? 'Ingresando...' : 'Ingresar' }}
+        <button 
+          type="submit" 
+          class="btn-login" 
+          [disabled]="isLoading"
+          [class.loading]="isLoading">
+          <span *ngIf="!isLoading">Ingresar</span>
+          <span *ngIf="isLoading" class="loading-content">
+            <span class="spinner"></span>
+            Ingresando...
+          </span>
         </button>
 
         <div class="forgot-password">

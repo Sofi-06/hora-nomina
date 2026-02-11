@@ -1,7 +1,7 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, throwError, timeout, catchError, TimeoutError } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 
 
@@ -42,30 +42,24 @@ export class Auth {
   }
 
   login(email: string, password: string): Observable<LoginResponse> {
-    return new Observable(observer => {
-      this.http.post<LoginResponse>(`${this.apiUrl}/auth/`, { email, password })
-        .subscribe({
-          next: (response) => {
-            if (response.status === 'success' && response.usuario) {
-              // Guardar usuario en localStorage y en el BehaviorSubject (solo en browser)
-              if (isPlatformBrowser(this.platformId)) {
-                localStorage.setItem('usuario', JSON.stringify(response.usuario));
-              }
-              this.usuarioActual.next(response.usuario);
-              
-              // Redirigir según el rol
-              this.redirigirPorRol(response.usuario.role);
-            }
-            observer.next(response);
-            observer.complete();
-          },
-          error: (error) => {
-            observer.error(error);
-          }
-        });
+  return this.http.post<LoginResponse>(`${this.apiUrl}/auth/`, { email, password })
+    .pipe(
+      timeout(2000), // Timeout de solo 3 segundos
+      catchError((error: any) => {
+        console.error('Error en login:', error);
         
-    });
-  }
+        if (error instanceof TimeoutError) {
+          return throwError(() => ({ 
+            status: 0, 
+            message: 'Servidor no disponible. Verifique su conexión.',
+            error: 'timeout'
+          }));
+        }
+        
+        return throwError(() => error);
+      })
+    );
+}
 
   logout(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -91,8 +85,8 @@ export class Auth {
       case 'docente':
         this.router.navigate(['/docente']);
         break;
-      case 'estudiante':
-        this.router.navigate(['/estudiante']);
+      case 'director':
+        this.router.navigate(['/director']);
         break;
       default:
         this.router.navigate(['/home']);

@@ -1,7 +1,7 @@
 .navbar {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   padding: 0 40px;
   height: 70px;
   background-color: #f5f5f5;
@@ -12,17 +12,22 @@
 .navbar-left {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 40px;
+  flex: 1;
 }
 
 .logo {
-  position: absolute;
-  left: 40px;
+  flex-shrink: 0;
+}
+
+.logo .nav-link {
+  padding: 0;
+  background: none !important;
 }
 
 .logo-img {
-  width: 40px;
-  height: 40px;
+  width: 80px;
+  height: 80px;
   object-fit: contain;
 }
 
@@ -30,7 +35,7 @@
   display: flex;
   gap: 15px;
   align-items: center;
-  justify-content: center ;
+  justify-content: flex-start;
 }
 
 .nav-link {
@@ -68,10 +73,9 @@
 }
 
 .navbar-right {
-  position: absolute;
-  right: 40px;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .user-dropdown {
@@ -171,17 +175,62 @@
 @media (max-width: 768px) {
   .navbar {
     padding: 0 20px;
+    height: 60px;
+  }
+
+  .navbar-left {
+    gap: 20px;
   }
 
   .nav-items {
-    gap: 8px;
+    gap: 10px;
   }
 
   .nav-link {
-    padding: 8px 12px;
+    padding: 6px 12px;
+    font-size: 13px;
   }
 
-  .nav-link span:last-child {
+  .nav-link span {
+    display: none;
+  }
+
+  .user-button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .logo-img {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0 15px;
+    height: 50px;
+  }
+  
+  .navbar-left {
+    gap: 15px;
+  }
+  
+  .nav-items {
+    gap: 8px;
+  }
+  
+  .nav-link {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .logo-img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .user-name {
     display: none;
   }
 }

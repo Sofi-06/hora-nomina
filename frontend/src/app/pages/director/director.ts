@@ -4,20 +4,20 @@ import { NavComponent } from '../../components/nav-component/nav-component';
 import { Auth } from '../../services/auth';
 
 @Component({
-  selector: 'app-estudiante',
+  selector: 'app-director',
   imports: [CommonModule, NavComponent],
   template: `
     <app-nav-component></app-nav-component>
     <div class="container">
-      <h1>Panel de Estudiante</h1>
+      <h1>Panel de Director</h1>
       <p>Bienvenido, {{ nombreUsuario }}</p>
       <div class="content">
-        <h2>Funciones de Estudiante:</h2>
+        <h2>Funciones de Director:</h2>
         <ul>
-          <li>Ver materias inscritas</li>
-          <li>Descargar contenido</li>
-          <li>Ver calificaciones</li>
-          <li>Participar en foros</li>
+          <li>Gestión académica</li>
+          <li>Supervisión de docentes</li>
+          <li>Reportes institucionales</li>
+          <li>Administración de programas</li>
         </ul>
       </div>
     </div>
@@ -40,7 +40,7 @@ import { Auth } from '../../services/auth';
     }
   `]
 })
-export class Estudiante implements OnInit {
+export class Director implements OnInit {
   nombreUsuario: string = '';
 
   constructor(private auth: Auth) {}

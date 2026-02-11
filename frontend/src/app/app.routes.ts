@@ -3,7 +3,7 @@ import { Login } from './components/login/login';
 import { Home } from './pages/home/home';
 import { Admin } from './pages/admin/admin';
 import { Docente } from './pages/docente/docente';
-import { Estudiante } from './pages/estudiante/estudiante';
+import { Director } from './pages/director/director';
 
 export const routes: Routes = [
     {
@@ -28,7 +28,7 @@ export const routes: Routes = [
         component: Docente
     },
     {
-        path: 'estudiante',
-        component: Estudiante
+        path: 'director',
+        component: Director
     }
 ];
