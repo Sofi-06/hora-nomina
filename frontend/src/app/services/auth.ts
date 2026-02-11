@@ -103,4 +103,8 @@ export class Auth {
         this.router.navigate(['/home']);
     }
   }
+  actualizarUsuario(usuario: Usuario): void {
+  this.usuarioActual.next(usuario);
+}
+
 }
