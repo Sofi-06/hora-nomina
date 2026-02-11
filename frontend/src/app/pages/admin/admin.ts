@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavComponent } from '../../components/nav-component/nav-component';
 import { Auth } from '../../services/auth';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-admin',
@@ -40,13 +41,21 @@ import { Auth } from '../../services/auth';
     }
   `]
 })
-export class Admin implements OnInit {
+export class Admin implements OnInit, OnDestroy {
   nombreUsuario: string = '';
+  private subscription?: Subscription;
 
   constructor(private auth: Auth) {}
 
   ngOnInit() {
-    const usuario = this.auth.getUsuarioActual();
-    this.nombreUsuario = usuario?.name || '';
+    // 👇 Suscribirse al observable para recibir actualizaciones en tiempo real
+    this.subscription = this.auth.usuario$.subscribe(usuario => {
+      this.nombreUsuario = usuario?.name || '';
+    });
+  }
+
+  ngOnDestroy() {
+    // 👇 Limpiar la suscripción para evitar memory leaks
+    this.subscription?.unsubscribe();
   }
 }

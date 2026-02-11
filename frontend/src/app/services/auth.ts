@@ -77,19 +77,8 @@ export class Auth {
     return this.usuarioActual.value !== null;
   }
 
-  private redirigirPorRol(rol: string): void {
-    switch (rol.toLowerCase()) {
-      case 'admin':
-        this.router.navigate(['/admin']);
-        break;
-      case 'docente':
-        this.router.navigate(['/docente']);
-        break;
-      case 'director':
-        this.router.navigate(['/director']);
-        break;
-      default:
-        this.router.navigate(['/home']);
-    }
-  }
+  actualizarUsuario(usuario: Usuario): void {
+  this.usuarioActual.next(usuario);
+}
+
 }

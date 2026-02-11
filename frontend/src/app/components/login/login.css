@@ -219,37 +219,23 @@ input[type="email"]:-webkit-autofill {
 }
 
 .error-message {
-  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
-  color: white;
-  padding: 14px 18px;
-  border-radius: 12px;
-  margin-bottom: 20px;
+  margin-top: -15px;
+  margin-bottom: 10px;
+  background: none;
+  color: #ec4646;
   text-align: center;
   font-size: 14px;
-  font-weight: 500;
   border: none;
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
   position: relative;
   overflow: hidden;
   animation: slideIn 0.3s ease-out;
 }
 
 .error-message::before {
-  content: '⚠️';
   margin-right: 8px;
-  font-size: 16px;
+  font-size: 12px;
 }
 
-.error-message::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  animation: shimmer 2s infinite;
-}
 
 @keyframes slideIn {
   from {
