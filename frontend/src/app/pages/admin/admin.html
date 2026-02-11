@@ -1,0 +1,91 @@
+<app-nav-component></app-nav-component>
+
+<div class="admin-container">
+  <!-- Header -->
+  <header class="admin-header">
+    <div class="header-content">
+      <div class="header-text">
+        <h1 class="main-title">PANEL DE CONTROL ACADÉMICO</h1>
+        <h2 class="welcome-title">Bienvenido(a), <span class="admin-name">{{ nombreUsuario }}</span></h2>
+        <p class="subtitle">Sistema de Gestión Académica — Universidad Santo Tomás</p>
+      </div>
+      <div class="date-display">
+        <i class="fas fa-calendar-alt calendar-icon"></i>
+        <span class="date-text">{{ currentDate }}</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Dashboard Cards -->
+  <main class="dashboard-content">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Cargando métricas del dashboard...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="hasError && !isLoading" class="error-container">
+      <div class="error-message">
+        Error al cargar datos. Mostrando datos de respaldo.
+        <button class="retry-btn" (click)="retryLoadData()">Reintentar</button>
+      </div>
+    </div>
+
+    <!-- Dashboard Data -->
+    <div *ngIf="!isLoading" class="metrics-grid">
+      <!-- Total Usuarios -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <h3 class="metric-title">TOTAL USUARIOS</h3>
+          <i class="fas fa-users metric-icon"></i>
+        </div>
+        <div class="metric-value">{{ totalUsuarios | number }}</div>
+        <div class="metric-change positive">
+          <i class="fas fa-arrow-up arrow"></i>
+          +{{ porcentajeUsuarios }}% este mes
+        </div>
+      </div>
+
+      <!-- Total Actividades -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <h3 class="metric-title">TOTAL ACTIVIDADES</h3>
+          <i class="fas fa-tasks metric-icon"></i>
+        </div>
+        <div class="metric-value">{{ totalActividades | number }}</div>
+        <div class="metric-change positive">
+          <i class="fas fa-arrow-up arrow"></i>
+          +{{ porcentajeActividades }} esta semana
+        </div>
+      </div>
+
+      <!-- Entregas Pendientes -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <h3 class="metric-title">ENTREGAS PENDIENTES</h3>
+          <i class="fas fa-clock metric-icon"></i>
+        </div>
+        <div class="metric-value">{{ entregasPendientes | number }}</div>
+        <div class="metric-change urgent">
+          <i class="fas fa-exclamation-triangle arrow"></i>
+          {{ vencenHoy }} vencen hoy
+        </div>
+      </div>
+
+      <!-- Entregas Aprobadas -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <h3 class="metric-title">ENTREGAS APROBADAS</h3>
+          <i class="fas fa-check-circle metric-icon"></i>
+        </div>
+        <div class="metric-value">{{ entregasAprobadas | number }}</div>
+        <div class="metric-change positive">
+          <i class="fas fa-arrow-up arrow"></i>
+          +{{ porcentajeAprobacion }}% aprobación
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>

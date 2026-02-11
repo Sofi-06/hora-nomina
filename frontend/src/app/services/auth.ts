@@ -77,6 +77,32 @@ export class Auth {
     return this.usuarioActual.value !== null;
   }
 
+  getDashboardMetrics(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/admin/dashboard-metrics`)
+      .pipe(
+        timeout(5000),
+        catchError((error: any) => {
+          console.error('Error obteniendo métricas:', error);
+          return throwError(error);
+        })
+      );
+  }
+
+  private redirigirPorRol(rol: string): void {
+    switch (rol.toLowerCase()) {
+      case 'admin':
+        this.router.navigate(['/admin']);
+        break;
+      case 'docente':
+        this.router.navigate(['/docente']);
+        break;
+      case 'director':
+        this.router.navigate(['/director']);
+        break;
+      default:
+        this.router.navigate(['/home']);
+    }
+  }
   actualizarUsuario(usuario: Usuario): void {
   this.usuarioActual.next(usuario);
 }
