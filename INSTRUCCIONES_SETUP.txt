@@ -1,0 +1,60 @@
+"""
+INSTRUCCIONES PARA CONFIGURAR EL SISTEMA DE LOGIN
+
+PASO 1: Instala las dependencias
+En el terminal del backend, ejecuta CADA comando por separado:
+
+pip install fastapi
+pip install uvicorn
+pip install python-dotenv  
+pip install mysql-connector-python
+pip install pydantic
+
+PASO 2: Configura tu base de datos MySQL
+Asegúrate de que tu servidor MySQL está corriendo y crea la base de datos:
+
+CREATE DATABASE seguimiento_cv_docentes;
+USE seguimiento_cv_docentes;
+
+PASO 3: Crea la tabla users
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'docente', 'estudiante') NOT NULL DEFAULT 'estudiante',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+PASO 4: Inserta usuarios de prueba
+INSERT INTO users (name, email, password, role) VALUES
+('Admin Sistema', 'admin@usantotomas.edu.co', 'admin123', 'admin'),
+('Juan Docente', 'juan.perez@usantotomas.edu.co', 'docente123', 'docente'),  
+('Maria Estudiante', 'maria.garcia@usantotomas.edu.co', 'estudiante123', 'estudiante');
+
+PASO 5: Verifica tu archivo .env
+Asegúrate de que el archivo .env en backend/ tenga las credenciales correctas:
+
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=tu_usuario_mysql
+DB_PASSWORD=tu_password_mysql  
+DB_NAME=seguimiento_cv_docentes
+
+PASO 6: Inicia el servidor backend
+python -m uvicorn app.main:app --reload
+
+PASO 7: En otro terminal, inicia Angular
+cd ../frontend
+ng serve
+
+USUARIOS DE PRUEBA PARA LOGIN:
+- admin@usantotomas.edu.co / admin123
+- juan.perez@usantotomas.edu.co / docente123  
+- maria.garcia@usantotomas.edu.co / estudiante123
+
+Una vez configurado, el sistema calculará automáticamente según el rol:
+- Admin → Panel de Administrador
+- Docente → Panel de Docente  
+- Estudiante → Panel de Estudiante
+"""

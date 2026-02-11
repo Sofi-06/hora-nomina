@@ -47,10 +47,16 @@
         <div class="user-dropdown" [class.open]="dropdownOpen">
             <button class="user-button" (click)="toggleDropdown()">
                 <i class="fas fa-user-circle"></i>
+                <span class="user-name">{{ usuario?.name || 'Usuario' }}</span>
                 <span class="dropdown-icon">▼</span>
             </button>
-            <div class="dropdown-menu">               
-                <a href="#" class="dropdown-item" (click)="closeDropdown(); $event.preventDefault()">
+            <div class="dropdown-menu">
+                <div class="user-info">
+                    <strong>{{ usuario?.name }}</strong>
+                    <small>{{ usuario?.role }}</small>
+                    <small>{{ usuario?.email }}</small>
+                </div>               
+                <a href="#" class="dropdown-item" (click)="logout(); closeDropdown(); $event.preventDefault()">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Cerrar Sesión</span>
                 </a>

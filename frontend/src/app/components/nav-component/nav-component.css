@@ -1,17 +1,23 @@
 .navbar {
   display: flex;
   align-items: center;
+  justify-content: center;
   padding: 0 40px;
   height: 70px;
   background-color: #f5f5f5;
   border-bottom: 1px solid #e0e0e0;
-  justify-content: space-between;
+  position: relative;
 }
 
 .navbar-left {
   display: flex;
   align-items: center;
   gap: 30px;
+}
+
+.logo {
+  position: absolute;
+  left: 40px;
 }
 
 .logo-img {
@@ -62,6 +68,8 @@
 }
 
 .navbar-right {
+  position: absolute;
+  right: 40px;
   display: flex;
   align-items: center;
 }
@@ -114,6 +122,32 @@
 
 .user-dropdown.open .dropdown-menu {
   display: block;
+}
+
+.user-info {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  text-align: left;
+}
+
+.user-info strong {
+  display: block;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.user-info small {
+  display: block;
+  color: #666;
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+.user-name {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 
