@@ -118,6 +118,11 @@ def get_dashboard_metrics():
 
         # Calcular porcentaje de crecimiento de usuarios
         porcentaje_usuarios = round((usuarios_mes / total_usuarios) * 100) if total_usuarios > 0 else 0
+        
+        # Total de actividades
+        cursor.execute("SELECT COUNT(*) as total FROM activities")
+        result = cursor.fetchone()
+        total_actividades = result['total'] if result else 0
 
         cursor.close()
         conexion.close()
@@ -129,7 +134,7 @@ def get_dashboard_metrics():
             "data": {
                 "totalUsuarios": total_usuarios,
                 "porcentajeUsuarios": porcentaje_usuarios,
-                "totalActividades": 356,  # Reemplazar con consulta real
+                "totalActividades": total_actividades,  # Reemplazar con consulta real
                 "porcentajeActividades": 8,  # Reemplazar con consulta real
                 "entregasPendientes": 89,   # Reemplazar con consulta real
                 "vencenHoy": 15,           # Reemplazar con consulta real
