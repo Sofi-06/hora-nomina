@@ -155,6 +155,27 @@
   background-color: #1a3a52;
 }
 
+.error-message {
+  background-color: #fee;
+  color: #c33;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 14px;
+  border: 1px solid #fcc;
+}
+
+.btn-login:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #999;
+}
+
+.btn-login:disabled:hover {
+  background-color: #999;
+}
+
 
 
 @media (max-width: 1024px) {
