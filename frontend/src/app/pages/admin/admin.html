@@ -7,7 +7,6 @@
       <div class="header-text">
         <h1 class="main-title">PANEL DE CONTROL ACADÉMICO</h1>
         <h2 class="welcome-title">Bienvenido(a), <span class="admin-name">{{ nombreUsuario }}</span></h2>
-        <p class="subtitle">Sistema de Gestión Académica — Universidad Santo Tomás</p>
       </div>
       <div class="date-display">
         <i class="fas fa-calendar-alt calendar-icon"></i>
@@ -18,22 +17,8 @@
 
   <!-- Dashboard Cards -->
   <main class="dashboard-content">
-    <!-- Loading State -->
-    <div *ngIf="isLoading" class="loading-container">
-      <div class="loading-spinner"></div>
-      <p class="loading-text">Cargando métricas del dashboard...</p>
-    </div>
-
-    <!-- Error State -->
-    <div *ngIf="hasError && !isLoading" class="error-container">
-      <div class="error-message">
-        Error al cargar datos. Mostrando datos de respaldo.
-        <button class="retry-btn" (click)="retryLoadData()">Reintentar</button>
-      </div>
-    </div>
-
-    <!-- Dashboard Data -->
-    <div *ngIf="!isLoading" class="metrics-grid">
+    <!-- Dashboard Data - Siempre visible -->
+    <div class="metrics-grid">
       <!-- Total Usuarios -->
       <div class="metric-card">
         <div class="metric-header">
@@ -42,7 +27,7 @@
         </div>
         <div class="metric-value">{{ totalUsuarios | number }}</div>
         <div class="metric-change positive">
-          <i class="fas fa-arrow-up arrow"></i>
+          <i class="fas fa-bell arrow"></i>
           +{{ porcentajeUsuarios }}% este mes
         </div>
       </div>
@@ -55,7 +40,7 @@
         </div>
         <div class="metric-value">{{ totalActividades | number }}</div>
         <div class="metric-change positive">
-          <i class="fas fa-arrow-up arrow"></i>
+          <i class="fas fa-bell arrow"></i>
           +{{ porcentajeActividades }} esta semana
         </div>
       </div>
@@ -68,7 +53,7 @@
         </div>
         <div class="metric-value">{{ entregasPendientes | number }}</div>
         <div class="metric-change urgent">
-          <i class="fas fa-exclamation-triangle arrow"></i>
+          <i class="fas fa-bell arrow"></i>
           {{ vencenHoy }} vencen hoy
         </div>
       </div>
@@ -81,7 +66,7 @@
         </div>
         <div class="metric-value">{{ entregasAprobadas | number }}</div>
         <div class="metric-change positive">
-          <i class="fas fa-arrow-up arrow"></i>
+          <i class="fas fa-bell arrow"></i>
           +{{ porcentajeAprobacion }}% aprobación
         </div>
       </div>
@@ -89,3 +74,5 @@
 
   </main>
 </div>
+
+<app-footer></app-footer>

@@ -56,6 +56,7 @@ export class Login {
           this.password = '';
 
           if (error.status === 401 || error.status === 400) {
+            alert('Correo o contraseña incorrectos');
             this.errorMessage = 'Correo o contraseña incorrectos';
           } else if (error.status === 0 || error.name === 'TimeoutError' || error.error === 'timeout') {
             this.errorMessage = 'No se puede conectar con el servidor. Verifique que esté ejecutándose.';

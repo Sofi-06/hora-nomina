@@ -1,12 +1,13 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavComponent } from '../../components/nav-component/nav-component';
+import { Footer } from '../../components/footer/footer';
 import { Auth } from '../../services/auth';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-admin',
-  imports: [CommonModule, NavComponent],
+  imports: [CommonModule, NavComponent, Footer],
   templateUrl: './admin.html',
   styleUrl: './admin.css'
 })
@@ -14,7 +15,7 @@ export class Admin implements OnInit, OnDestroy {
   nombreUsuario: string = '';
   currentDate: string = '';
   
-  // Métricas del dashboard - inicializadas en 0
+  // Métricas del dashboard
   totalUsuarios: number = 0;
   porcentajeUsuarios: number = 0;
   totalActividades: number = 0;
@@ -24,9 +25,6 @@ export class Admin implements OnInit, OnDestroy {
   entregasAprobadas: number = 0;
   porcentajeAprobacion: number = 0;
   
-  // Estado de carga
-  isLoading: boolean = true;
-  hasError: boolean = false;
   private subscription?: Subscription;
 
   constructor(private auth: Auth) {}
@@ -55,14 +53,11 @@ export class Admin implements OnInit, OnDestroy {
   }
 
   private loadDashboardData(): void {
-    this.isLoading = true;
-    this.hasError = false;
-    
     this.auth.getDashboardMetrics()
       .subscribe({
         next: (response) => {
           if (response.status === 'success' && response.data) {
-            // Cargar datos reales de la base de datos
+            console.log('✅ Métricas cargadas:', response.data);
             this.totalUsuarios = response.data.totalUsuarios;
             this.porcentajeUsuarios = response.data.porcentajeUsuarios;
             this.totalActividades = response.data.totalActividades;
@@ -72,41 +67,14 @@ export class Admin implements OnInit, OnDestroy {
             this.entregasAprobadas = response.data.entregasAprobadas;
             this.porcentajeAprobacion = response.data.porcentajeAprobacion;
           }
-          this.isLoading = false;
         },
         error: (error) => {
-          console.error('Error cargando métricas del dashboard:', error);
-          this.hasError = true;
-          // Fallback a datos de ejemplo si falla
-          this.loadFallbackData();
-          this.isLoading = false;
+          console.error('❌ Error cargando métricas:', error);
         }
       });
   }
 
-  // Método público para el botón de reintento
-  retryLoadData(): void {
-    this.loadDashboardData();
-  }
-
-  private loadFallbackData(): void {
-    // Datos de respaldo si no se puede conectar con el backend
-    this.totalUsuarios = 1284;
-    this.porcentajeUsuarios = 12;
-    this.totalActividades = 356;
-    this.porcentajeActividades = 8;
-    this.entregasPendientes = 89;
-    this.vencenHoy = 15;
-    this.entregasAprobadas = 1847;
-    this.porcentajeAprobacion = 95;
-    // 👇 Suscribirse al observable para recibir actualizaciones en tiempo real
-    this.subscription = this.auth.usuario$.subscribe(usuario => {
-      this.nombreUsuario = usuario?.name || '';
-    });
-  }
-
   ngOnDestroy() {
-    // 👇 Limpiar la suscripción para evitar memory leaks
     this.subscription?.unsubscribe();
   }
 }
