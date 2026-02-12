@@ -1,9 +1,8 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient} from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, throwError, timeout, catchError, TimeoutError } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
-
 
 export interface Usuario {
   id: number;
@@ -24,13 +23,17 @@ export interface LoginResponse {
 export class Auth {
   private apiUrl = 'http://localhost:8000';
   private usuarioActual = new BehaviorSubject<Usuario | null>(null);
-  
+ 
+
   public usuario$ = this.usuarioActual.asObservable();
+
+  private activeNavSection = new BehaviorSubject<number>(0);
+  public activeNavSection$ = this.activeNavSection.asObservable();
 
   constructor(
     private http: HttpClient,
     private router: Router,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
   ) {
     // Verificar si hay sesión guardada (solo en el browser)
     if (isPlatformBrowser(this.platformId)) {
@@ -42,24 +45,23 @@ export class Auth {
   }
 
   login(email: string, password: string): Observable<LoginResponse> {
-  return this.http.post<LoginResponse>(`${this.apiUrl}/auth/`, { email, password })
-    .pipe(
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/`, { email, password }).pipe(
       timeout(2000), // Timeout de solo 3 segundos
       catchError((error: any) => {
         console.error('Error en login:', error);
-        
+
         if (error instanceof TimeoutError) {
-          return throwError(() => ({ 
-            status: 0, 
+          return throwError(() => ({
+            status: 0,
             message: 'Servidor no disponible. Verifique su conexión.',
-            error: 'timeout'
+            error: 'timeout',
           }));
         }
-        
+
         return throwError(() => error);
-      })
+      }),
     );
-}
+  }
 
   logout(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -78,14 +80,13 @@ export class Auth {
   }
 
   getDashboardMetrics(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/admin/dashboard-metrics`)
-      .pipe(
-        timeout(5000),
-        catchError((error: any) => {
-          console.error('Error obteniendo métricas:', error);
-          return throwError(error);
-        })
-      );
+    return this.http.get<any>(`${this.apiUrl}/admin/dashboard-metrics`).pipe(
+      timeout(5000),
+      catchError((error: any) => {
+        console.error('Error obteniendo métricas:', error);
+        return throwError(error);
+      }),
+    );
   }
 
   private redirigirPorRol(rol: string): void {
@@ -104,7 +105,12 @@ export class Auth {
     }
   }
   actualizarUsuario(usuario: Usuario): void {
-  this.usuarioActual.next(usuario);
+    this.usuarioActual.next(usuario);
+  }
+
+  setActiveNavSection(section: number): void {
+  this.activeNavSection.next(section);
+}
 }
 
-}
+

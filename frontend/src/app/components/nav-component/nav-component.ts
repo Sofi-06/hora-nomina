@@ -4,6 +4,7 @@ import { Auth, Usuario } from '../../services/auth';
 
 @Component({
   selector: 'app-nav-component',
+  standalone: true,
   imports: [CommonModule],
   templateUrl: './nav-component.html',
   styleUrl: './nav-component.css',
@@ -23,6 +24,7 @@ export class NavComponent implements OnInit {
 
   setActiveLink(index: number): void {
     this.activeLink = index;
+    this.auth.setActiveNavSection(index);
   }
 
   toggleDropdown(): void {

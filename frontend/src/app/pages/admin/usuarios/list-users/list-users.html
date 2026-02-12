@@ -1,1 +1,146 @@
-<p>list-users works!</p>
+<div class="list-users-container">
+  <!-- Header -->
+  <div class="users-header">
+    <h2 class="users-title">
+      <i class="fas fa-users"></i> Gestión de Usuarios
+    </h2>
+    
+    <!-- Crear ------------------------------------------------------------>
+    <button type="button" class="btn-create" (click)="crearUsuario()">
+      <i class="fas fa-user-plus"></i> Crear usuario
+    </button>
+
+    <div class="search-bar">
+      <input 
+        type="text" 
+        placeholder="Buscar por nombre, email o rol..."
+        [(ngModel)]="searchTerm"
+        (input)="buscar()"
+        class="search-input"
+      >
+      <i class="fas fa-search search-icon"></i>
+    </div>
+  </div>
+
+  <!-- Mensajes de éxito -->
+  <div *ngIf="successMessage" class="success-message">
+    <i class="fas fa-check-circle"></i> {{ successMessage }}
+  </div>
+
+  <!-- Mensajes de error -->
+  <div *ngIf="error" class="error-message">
+    <i class="fas fa-exclamation-circle"></i> {{ error }}
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-spinner">
+    <i class="fas fa-spinner fa-spin"></i> Cargando usuarios...
+  </div>
+
+  <!-- Sin datos -->
+  <div *ngIf="!loading && usuariosFiltered.length === 0" class="no-data">
+    <i class="fas fa-inbox"></i>
+    <p>No hay usuarios para mostrar</p>
+  </div>
+
+  <!-- Tabla de usuarios -->
+  <div *ngIf="!loading && usuariosFiltered.length > 0" class="table-wrapper">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th>Rol</th>
+          <th>Departamento</th>
+          <th>Unidades</th>
+          <th>Actividades</th>
+          <th>Estado</th>
+          <th>Fecha Creación</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let usuario of pagedUsuarios" class="user-row">
+          <td class="cell-id">{{ usuario.id }}</td>
+          <td class="cell-name">{{ usuario.name }}</td>
+          <td class="cell-email">{{ usuario.email }}</td>
+          <td class="cell-role">
+            <span class="role-badge" [ngClass]="'role-' + usuario.role.toLowerCase()">
+              {{ usuario.role }}
+            </span>
+          </td>
+          <td class="cell-department">{{ usuario.department || '-' }}</td>
+          <td class="cell-units">{{ usuario.units || '-' }}</td>
+          <td class="cell-activities">{{ usuario.activities }}</td>
+          <td class="cell-state">
+            <span class="state-badge" [ngClass]="'state-' + usuario.state.toLowerCase()">
+              {{ usuario.state }}
+            </span>
+          </td>
+          <td class="cell-date">{{ usuario.created_at | date:'short' }}</td>
+          <td class="cell-actions">
+                <!-- Editar ------------------------------------------------------------>
+            <button
+              class="btn-edit"
+              (click)="editarUsuario(usuario.id)"
+              title="Editar usuario"
+            >
+              <i class="fas fa-edit"></i>
+            </button>
+            <button 
+              *ngIf="usuario.state === 'Inactivo'"
+              class="btn-activate" 
+              (click)="activarUsuario(usuario.id)" 
+              title="Activar usuario"
+            >
+              <i class="fas fa-toggle-off"></i>
+            </button>
+            <button 
+              *ngIf="usuario.state === 'Activo'"
+              class="btn-deactivate" 
+              (click)="inactivarUsuario(usuario.id)" 
+              title="Inactivar usuario"
+            >
+              <i class="fas fa-toggle-on"></i> 
+            </button>
+            <button 
+              class="btn-delete" 
+              (click)="eliminarUsuario(usuario.id)" 
+              title="Eliminar usuario"
+            >
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer con contador -->
+  <div *ngIf="!loading && usuariosFiltered.length > 0" class="users-footer">
+    <p>
+      Mostrando <strong>{{ pageStart }}</strong>-<strong>{{ pageEnd }}</strong>
+      de <strong>{{ usuariosFiltered.length }}</strong> usuarios
+    </p>
+    <div class="pagination">
+      <button
+        type="button"
+        class="pagination-btn"
+        [disabled]="currentPage === 1"
+        (click)="prevPage()"
+      >
+        Anterior
+      </button>
+      <span class="pagination-info">Página {{ currentPage }} de {{ totalPages }}</span>
+      <button
+        type="button"
+        class="pagination-btn"
+        [disabled]="currentPage === totalPages"
+        (click)="nextPage()"
+      >
+        Siguiente
+      </button>
+    </div>
+  </div>
+</div>

@@ -2,18 +2,21 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavComponent } from '../../components/nav-component/nav-component';
 import { Footer } from '../../components/footer/footer';
+import { ListUsers } from './usuarios/list-users/list-users';
 import { Auth } from '../../services/auth';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-admin',
-  imports: [CommonModule, NavComponent, Footer],
+  standalone: true,
+  imports: [CommonModule, NavComponent, Footer, ListUsers],
   templateUrl: './admin.html',
   styleUrl: './admin.css'
 })
 export class Admin implements OnInit, OnDestroy {
   nombreUsuario: string = '';
   currentDate: string = '';
+  activeSection: number = 0; // 0: Dashboard, 4: Usuarios
   
   // Métricas del dashboard
   totalUsuarios: number = 0;
@@ -34,6 +37,13 @@ export class Admin implements OnInit, OnDestroy {
     this.nombreUsuario = usuario?.name || 'Administrador';
     this.setCurrentDate();
     this.loadDashboardData();
+    
+    // Escuchar cambios en la sección activa del nav
+    if (this.auth.activeNavSection$) {
+      this.subscription = this.auth.activeNavSection$.subscribe(section => {
+        this.activeSection = section;
+      });
+    }
   }
 
   private setCurrentDate(): void {

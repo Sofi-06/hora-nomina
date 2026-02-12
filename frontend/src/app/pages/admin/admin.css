@@ -154,6 +154,34 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
+/* User ------------------------------------------------------- */
+.section-placeholder {
+  text-align: center;
+  padding: 100px 30px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  margin: 20px 0;
+}
+
+.section-placeholder i {
+  font-size: 64px;
+  color: #ddd;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.section-placeholder h2 {
+  color: #2c3e50;
+  font-size: 28px;
+  margin: 20px 0;
+}
+
+.section-placeholder p {
+  color: #7f8c8d;
+  font-size: 16px;
+  margin: 0;
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
