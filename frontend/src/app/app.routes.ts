@@ -5,6 +5,7 @@ import { Admin } from './pages/admin/admin';
 import { ListUsers } from './pages/admin/usuarios/list-users/list-users';
 import { Docente } from './pages/docente/docente';
 import { Director } from './pages/director/director';
+import { CreateUser } from './pages/admin/usuarios/create-user/create-user';
 
 
 export const routes: Routes = [
@@ -29,6 +30,10 @@ export const routes: Routes = [
     {
         path: 'usuarios',
         component: ListUsers
+    },
+    {
+        path: 'crearUsuarios',
+        component: CreateUser
     },
     {
         path: 'docente',

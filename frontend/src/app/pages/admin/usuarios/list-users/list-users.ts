@@ -23,7 +23,7 @@ interface Usuario {
 @Component({
   selector: 'app-list-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, NavComponent, Footer],
+  imports: [CommonModule, FormsModule, NavComponent, Footer, RouterLink],
   templateUrl: './list-users.html',
   styleUrl: './list-users.css',
 })

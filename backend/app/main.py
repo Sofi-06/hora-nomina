@@ -5,6 +5,9 @@ import os
 from dotenv import load_dotenv
 import mysql.connector
 from datetime import datetime, timedelta
+from pydantic import BaseModel, EmailStr
+from typing import Optional, Literal
+import bcrypt
 
 # Agregar el directorio padre al path para poder importar auth
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -15,6 +18,17 @@ from baseDatos.database import get_database_connection
 load_dotenv()
 
 app = FastAPI()
+
+class CreateUserRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+    user_type: Literal["Admin", "Docente", "Director"]
+    identification_type: Literal["CC", "CE"] = "CC"
+    identification: str
+    gender: Literal["Femenino", "Masculino"]
+    state: Literal["Activo", "Inactivo"] = "Activo"
+    department_id: Optional[int] = None
 
 app.add_middleware(
     CORSMiddleware,
@@ -434,6 +448,110 @@ def delete_user(user_id: int):
         print(f"❌ Error eliminando usuario: {e}")
         import traceback
         traceback.print_exc()
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+@app.get("/departments")
+def get_departments():
+    """Obtiene lista de departamentos"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT id, name
+            FROM departments
+            ORDER BY name ASC
+        """)
+        departamentos = cursor.fetchall()
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "data": departamentos
+        }
+
+    except Exception as e:
+        print(f"❌ Error obteniendo departamentos: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.post("/admin/users")
+def create_user(payload: CreateUserRequest):
+    """Crea un nuevo usuario"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor()
+
+        # Validar email o identificacion duplicados
+        cursor.execute(
+            "SELECT id FROM users WHERE email = %s OR identification = %s",
+            (payload.email, payload.identification)
+        )
+        if cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Email o identificación ya existen"
+            }
+
+        password_hash = bcrypt.hashpw(
+            payload.password.encode("utf-8"),
+            bcrypt.gensalt()
+        ).decode("utf-8")
+
+        now = datetime.now()
+
+        cursor.execute("""
+            INSERT INTO users
+            (name, email, password, user_type, identification_type, identification, gender, state, department_id, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            payload.name,
+            payload.email,
+            password_hash,
+            payload.user_type,
+            payload.identification_type,
+            payload.identification,
+            payload.gender,
+            payload.state,
+            payload.department_id,
+            now,
+            now
+        ))
+
+        user_id = cursor.lastrowid
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "message": "Usuario creado correctamente",
+            "data": {"id": user_id}
+        }
+
+    except Exception as e:
+        print(f"❌ Error creando usuario: {e}")
         return {
             "status": "error",
             "message": str(e)

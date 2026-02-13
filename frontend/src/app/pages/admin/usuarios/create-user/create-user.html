@@ -1,1 +1,83 @@
-<p>create-user works!</p>
+<app-nav-component></app-nav-component>
+
+<div class="create-user-container">
+    <h2>Crear usuario</h2>
+
+    <form (ngSubmit)="onSubmit()">
+        <div class="form-grid">
+            <label>
+                Nombre *
+                <input type="text" [(ngModel)]="name" name="name" required>
+            </label>
+
+            <label>
+                Email *
+                <input type="email" [(ngModel)]="email" name="email" required>
+            </label>
+
+            <label>
+                Password *
+                <input type="password" [(ngModel)]="password" name="password" required>
+            </label>
+
+            <label>
+                Rol *
+                <select [(ngModel)]="user_type" name="user_type" required>
+                    <option value="Admin">Admin</option>
+                    <option value="Docente">Docente</option>
+                    <option value="Director">Director</option>
+                </select>
+            </label>
+
+            <label>
+                Tipo ID *
+                <select [(ngModel)]="identification_type" name="identification_type" required>
+                    <option value="CC">CC</option>
+                    <option value="CE">CE</option>
+                </select>
+            </label>
+
+            <label>
+                Identificación *
+                <input type="text" [(ngModel)]="identification" name="identification" required>
+            </label>
+
+            <label>
+                Género *
+                <select [(ngModel)]="gender" name="gender" required>
+                    <option value="Femenino">Femenino</option>
+                    <option value="Masculino">Masculino</option>
+                </select>
+            </label>
+
+            <label>
+                Estado *
+                <select [(ngModel)]="state" name="state" required>
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                </select>
+            </label>
+
+            <label>
+                Departamento
+                <select [(ngModel)]="department_id" name="department_id">
+                    <option [ngValue]="null">Selecciona un departamento</option>
+                    <option *ngFor="let dept of departments" [ngValue]="dept.id">
+                        {{ dept.name }}
+                    </option>
+                </select>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" [disabled]="isLoading">
+                {{ isLoading ? 'Guardando...' : 'Crear usuario' }}
+            </button>
+        </div>
+
+        <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+        <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
+    </form>
+</div>
+
+<app-footer></app-footer>
