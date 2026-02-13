@@ -4,16 +4,20 @@ import { NavComponent } from '../../components/nav-component/nav-component';
 import { Footer } from '../../components/footer/footer';
 import { Auth } from '../../services/auth';
 import { Subscription } from 'rxjs';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-admin',
+  standalone: true,
   imports: [CommonModule, NavComponent, Footer],
   templateUrl: './admin.html',
   styleUrl: './admin.css'
 })
 export class Admin implements OnInit, OnDestroy {
+  
   nombreUsuario: string = '';
   currentDate: string = '';
+  activeSection: number = 0; // 0: Dashboard, 4: Usuarios
   
   // Métricas del dashboard
   totalUsuarios: number = 0;
@@ -27,13 +31,24 @@ export class Admin implements OnInit, OnDestroy {
   
   private subscription?: Subscription;
 
-  constructor(private auth: Auth) {}
+  constructor(private auth: Auth, private cd: ChangeDetectorRef) {}
 
   ngOnInit() {
     const usuario = this.auth.getUsuarioActual();
     this.nombreUsuario = usuario?.name || 'Administrador';
     this.setCurrentDate();
     this.loadDashboardData();
+    
+    // Escuchar cambios en la sección activa del nav
+
+    /*
+        if (this.auth.activeNavSection$) {
+      this.subscription = this.auth.activeNavSection$.subscribe(section => {
+        this.activeSection = section;
+      });
+    }
+     */
+
   }
 
   private setCurrentDate(): void {
@@ -57,7 +72,7 @@ export class Admin implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           if (response.status === 'success' && response.data) {
-            console.log('✅ Métricas cargadas:', response.data);
+            console.log('Métricas cargadas:', response.data);
             this.totalUsuarios = response.data.totalUsuarios;
             this.porcentajeUsuarios = response.data.porcentajeUsuarios;
             this.totalActividades = response.data.totalActividades;
@@ -66,6 +81,7 @@ export class Admin implements OnInit, OnDestroy {
             this.vencenHoy = response.data.vencenHoy;
             this.entregasAprobadas = response.data.entregasAprobadas;
             this.porcentajeAprobacion = response.data.porcentajeAprobacion;
+            this.cd.detectChanges();
           }
         },
         error: (error) => {

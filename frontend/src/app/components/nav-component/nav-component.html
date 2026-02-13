@@ -10,32 +10,35 @@
 
         <!-- Elementos Barra -->
         <div class="nav-items">
-            <a href="#" (click)="setActiveLink(0); $event.preventDefault()" [class.active]="activeLink === 0"
-                class="nav-link">
-                <i class="fas fa-home"></i>
-                <span>Inicio</span>
-            </a>
-            <a href="#" (click)="setActiveLink(1); $event.preventDefault()" [class.active]="activeLink === 1"
+<a routerLink="/admin"
+   routerLinkActive="active"
+   [routerLinkActiveOptions]="{ exact: true }"
+   class="nav-link">
+   <i class="fas fa-home"></i>
+   <span>Inicio</span>
+</a>
+            <a href="#"
                 class="nav-link">
                 <i class="fas fa-building"></i>
                 <span>Unidades</span>
             </a>
-            <a href="#" (click)="setActiveLink(2); $event.preventDefault()" [class.active]="activeLink === 2"
+            <a href="#" 
                 class="nav-link">
                 <i class="fas fa-cogs"></i>
                 <span>Códigos</span>
             </a>
-            <a href="#" (click)="setActiveLink(3); $event.preventDefault()" [class.active]="activeLink === 3"
+            <a href="#"
                 class="nav-link">
                 <i class="fas fa-sitemap"></i>
                 <span>Departamentos</span>
             </a>
-            <a href="#" (click)="setActiveLink(4); $event.preventDefault()" [class.active]="activeLink === 4"
-                class="nav-link">
-                <i class="fas fa-users"></i>
-                <span>Usuarios</span>
-            </a>
-            <a href="#" (click)="setActiveLink(5); $event.preventDefault()" [class.active]="activeLink === 5"
+<a routerLink="/usuarios"
+   routerLinkActive="active"
+   class="nav-link">
+   <i class="fas fa-users"></i>
+   <span>Usuarios</span>
+</a>
+            <a href="#"
                 class="nav-link">
                 <i class="fas fa-chart-bar"></i>
                 <span>Actividades</span>

@@ -1,8 +1,8 @@
 <app-nav-component></app-nav-component>
 
 <div class="admin-container">
-  <!-- Header -->
-  <header class="admin-header">
+  <!-- Header (solo en Dashboard) -->
+  <header class="admin-header" *ngIf="activeSection === 0">
     <div class="header-content">
       <div class="header-text">
         <h1 class="main-title">PANEL DE CONTROL ACADÉMICO</h1>
@@ -15,10 +15,12 @@
     </div>
   </header>
 
-  <!-- Dashboard Cards -->
+
+  <!-- Contenido dinámico según la sección activa -->
   <main class="dashboard-content">
-    <!-- Dashboard Data - Siempre visible -->
-    <div class="metrics-grid">
+    
+    <!-- Dashboard (Sección 0) -->
+    <div *ngIf="activeSection === 0" class="metrics-grid">
       <!-- Total Usuarios -->
       <div class="metric-card">
         <div class="metric-header">
@@ -72,6 +74,11 @@
       </div>
     </div>
 
+
+    <!-- 
+    
+    -->
+    
   </main>
 </div>
 

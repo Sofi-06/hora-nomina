@@ -1,10 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Auth, Usuario } from '../../services/auth';
+import { RouterLink, RouterModule } from '@angular/router';
+ 
 
 @Component({
   selector: 'app-nav-component',
-  imports: [CommonModule],
+  standalone: true,
+  imports: [CommonModule, RouterLink, RouterModule],
   templateUrl: './nav-component.html',
   styleUrl: './nav-component.css',
 })
@@ -21,9 +24,6 @@ export class NavComponent implements OnInit {
     });
   }
 
-  setActiveLink(index: number): void {
-    this.activeLink = index;
-  }
 
   toggleDropdown(): void {
     this.dropdownOpen = !this.dropdownOpen;
@@ -35,5 +35,8 @@ export class NavComponent implements OnInit {
 
   logout(): void {
     this.auth.logout();
+  }
+  cambioUser(){
+    
   }
 }
