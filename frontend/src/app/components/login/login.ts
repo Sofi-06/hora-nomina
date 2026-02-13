@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Auth } from '../../services/auth';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-login',
@@ -18,7 +19,8 @@ export class Login {
 
   constructor(
     private auth: Auth,
-    private router: Router
+    private router: Router,
+    private cd: ChangeDetectorRef
   ) {}
 
   onSubmit(): void {
@@ -56,8 +58,12 @@ export class Login {
           this.password = '';
 
           if (error.status === 401 || error.status === 400) {
-            alert('Correo o contraseña incorrectos');
             this.errorMessage = 'Correo o contraseña incorrectos';
+            this.cd.detectChanges();
+             setTimeout(() => {
+            this.errorMessage = '';
+            this.cd.detectChanges(); 
+          }, 2000);
           } else if (error.status === 0 || error.name === 'TimeoutError' || error.error === 'timeout') {
             this.errorMessage = 'No se puede conectar con el servidor. Verifique que esté ejecutándose.';
           } else if (error.status >= 500) {

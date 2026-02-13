@@ -25,6 +25,18 @@
   background: none !important;
 }
 
+.nav-link.active {
+  background-color: #0052cc;
+  color: white;
+  font-weight: 500;
+}
+.nav-link:focus {
+  background-color: #0052cc;
+  color: white;
+  font-weight: 500;
+}
+
+
 .logo-img {
   width: 80px;
   height: 80px;

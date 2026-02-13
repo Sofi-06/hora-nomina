@@ -3,6 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
+import { NavComponent   } from '../../../../components/nav-component/nav-component';
+import { Footer } from '../../../../components/footer/footer';
+import { ChangeDetectorRef } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 interface Usuario {
   id: number;
@@ -19,7 +23,7 @@ interface Usuario {
 @Component({
   selector: 'app-list-users',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NavComponent, Footer],
   templateUrl: './list-users.html',
   styleUrl: './list-users.css',
 })
@@ -28,7 +32,7 @@ export class ListUsers implements OnInit, OnDestroy {
   usuariosFiltered: Usuario[] = [];
   pagedUsuarios: Usuario[] = [];
   searchTerm: string = '';
-  loading: boolean = true;
+  loading: boolean = false;
   error: string = '';
   successMessage: string = '';
   pageSize: number = 20;
@@ -36,7 +40,7 @@ export class ListUsers implements OnInit, OnDestroy {
   private apiUrl = 'http://localhost:8000';
   private subscription?: Subscription;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private cd: ChangeDetectorRef)  {}
 
   ngOnInit() {
     this.loadUsuarios();
@@ -45,8 +49,6 @@ export class ListUsers implements OnInit, OnDestroy {
     loadUsuarios(options?: { preserveSearch?: boolean; clearSuccessMessage?: boolean }): void {
     const preserveSearch = options?.preserveSearch ?? false;
     const clearSuccessMessage = options?.clearSuccessMessage ?? true;
-
-    this.loading = true;
     this.error = '';
     if (clearSuccessMessage) {
       this.successMessage = '';
@@ -64,6 +66,7 @@ export class ListUsers implements OnInit, OnDestroy {
               this.usuariosFiltered = this.usuarios;
               this.currentPage = 1;
               this.updatePagedUsuarios();
+              this.cd.detectChanges();
             }
 
             console.log('Usuarios cargados:', this.usuarios);
@@ -96,26 +99,34 @@ export class ListUsers implements OnInit, OnDestroy {
     this.updatePagedUsuarios();
   }
 
-  activarUsuario(id: number): void {
-    this.http.put<any>(`${this.apiUrl}/admin/users/${id}/activate`, {})
-      .subscribe({
-        next: (response) => {
-          if (response.status === 'success') {
-            const usuario = this.usuarios.find(u => u.id === id);
-            if (usuario) {
-              usuario.state = 'Activo';
-            }
-            this.successMessage = `✅ Usuario activado correctamente`;
-            setTimeout(() => this.successMessage = '', 3000);
-            console.log('✅ Usuario activado');
+activarUsuario(id: number): void {
+  this.http.put<any>(`${this.apiUrl}/admin/users/${id}/activate`, {})
+    .subscribe({
+      next: (response) => {
+        if (response.status === 'success') {
+
+          const usuario = this.usuarios.find(u => u.id === id);
+          if (usuario) {
+            usuario.state = 'Activo';
           }
-        },
-        error: (error) => {
-          console.error('Error activando usuario:', error);
-          this.error = 'Error al activar el usuario';
+
+          this.successMessage = 'Usuario activado correctamente';
+          this.cd.detectChanges();
+
+          setTimeout(() => {
+            this.successMessage = '';
+            this.cd.detectChanges(); 
+          }, 2000);
         }
-      });
-  }
+      },
+      error: (error) => {
+        console.error('Error activando usuario:', error);
+        this.error = 'Error al activar el usuario';
+        this.cd.detectChanges();
+      }
+    });
+}
+
 
   inactivarUsuario(id: number): void {
     this.http.put<any>(`${this.apiUrl}/admin/users/${id}/deactivate`, {})
@@ -125,10 +136,15 @@ export class ListUsers implements OnInit, OnDestroy {
             const usuario = this.usuarios.find(u => u.id === id);
             if (usuario) {
               usuario.state = 'Inactivo';
+              this.cd.detectChanges();
             }
-            this.successMessage = `Usuario inactivado correctamente`;
-            setTimeout(() => this.successMessage = '', 3000);
-            console.log('Usuario inactivado');
+            
+          this.error = 'Usuario inactivado correctamente';
+          this.cd.detectChanges();
+          setTimeout(() => {
+            this.error = '';
+            this.cd.detectChanges(); 
+          }, 2000);
           }
         },
         error: (error) => {
@@ -149,28 +165,37 @@ export class ListUsers implements OnInit, OnDestroy {
   }
 
 eliminarUsuario(id: number): void {
-    if (confirm('¿Está seguro de que desea eliminar este usuario?')) {
-      this.http.delete<any>(`${this.apiUrl}/admin/users/${id}`)
-        .subscribe({
-          next: (response) => {
-            if (response.status === 'success') {
-              this.successMessage = 'Usuario eliminado correctamente';
-              this.loadUsuarios({ preserveSearch: true, clearSuccessMessage: false });
+  if (!confirm('¿Está seguro de que desea eliminar este usuario?')) return;
 
-              setTimeout(() => {
-                this.successMessage = '';
-              }, 3000);
+  this.http.delete<any>(`${this.apiUrl}/admin/users/${id}`)
+    .subscribe({
+      next: (response) => {
 
-              console.log('Usuario eliminado');
-            }
-          },
-          error: (error) => {
-            console.error('Error eliminando usuario:', error);
-            this.error = 'Error al eliminar el usuario';
-          }
-        });
-    }
-  }
+        if (response.status === 'success') {
+
+          // 👇 Crear NUEVA referencia del array
+          const nuevosUsuarios = this.usuarios.filter(u => u.id !== id);
+          this.usuarios = nuevosUsuarios;
+
+          this.successMessage = 'Usuario eliminado correctamente';
+
+          // 👇 FORZAR DETECCIÓN (importante si usas OnPush)
+          this.cd.markForCheck();
+
+          setTimeout(() => {
+            this.successMessage = '';
+            this.cd.markForCheck();
+          }, 3000);
+        }
+      },
+      error: (error) => {
+        this.error = 'Error al eliminar el usuario';
+        this.cd.markForCheck();
+      }
+    });
+}
+
+
 
   ngOnDestroy() {
     this.subscription?.unsubscribe();

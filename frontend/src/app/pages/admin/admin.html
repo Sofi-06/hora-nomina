@@ -15,15 +15,6 @@
     </div>
   </header>
 
-  <!-- Header alternativo para otras secciones -->
-  <header class="admin-header section-header" *ngIf="activeSection !== 0">
-    <div class="header-content">
-      <div class="header-text">
-        <h2 class="welcome-title">Hola, <span class="admin-name">{{ nombreUsuario }}</span></h2>
-      </div>
-     
-    </div>
-  </header>
 
   <!-- Contenido dinámico según la sección activa -->
   <main class="dashboard-content">
@@ -83,33 +74,11 @@
       </div>
     </div>
 
-    <!-- Lista de Usuarios (Sección 4) -->
-    <app-list-users *ngIf="activeSection === 4"></app-list-users>
 
-    <!-- Otras secciones (próximamente) -->
-    <div *ngIf="activeSection === 1" class="section-placeholder">
-      <i class="fas fa-building"></i>
-      <h2>Gestión de Unidades</h2>
-      <p>Próximamente...</p>
-    </div>
-
-    <div *ngIf="activeSection === 2" class="section-placeholder">
-      <i class="fas fa-cogs"></i>
-      <h2>Gestión de Códigos</h2>
-      <p>Próximamente...</p>
-    </div>
-
-    <div *ngIf="activeSection === 3" class="section-placeholder">
-      <i class="fas fa-sitemap"></i>
-      <h2>Gestión de Departamentos</h2>
-      <p>Próximamente...</p>
-    </div>
-
-    <div *ngIf="activeSection === 5" class="section-placeholder">
-      <i class="fas fa-chart-bar"></i>
-      <h2>Gestión de Actividades</h2>
-      <p>Próximamente...</p>
-    </div>
+    <!-- 
+    
+    -->
+    
   </main>
 </div>
 
