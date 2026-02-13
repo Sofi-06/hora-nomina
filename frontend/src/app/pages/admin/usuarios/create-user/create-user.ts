@@ -45,23 +45,26 @@ export class CreateUser implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.cd.detectChanges();
-    
       this.loadDepartments();
     
   }
 
-  private loadDepartments(): void {
-    this.http.get<{ status: string; data: Department[] }>(`${this.apiUrl}/departments`).subscribe({
-      next: (response) => {
-        this.departments = response.data; 
-        console.log(this.departments);       },
-      error: (err) => {
-        console.error(err);
-        this.errorMessage = 'Error al cargar los departamentos';
-      },
-    });
-  }
+private loadDepartments(): void {
+  console.log('🔍 Intentando cargar departamentos...');
+  
+  this.http.get<{ status: string; data: Department[] }>(`${this.apiUrl}/departments`).subscribe({
+    next: (response) => {
+      
+      this.departments = response.data;
+      
+      
+      this.cd.detectChanges();
+    },
+    error: (err) => {
+      this.errorMessage = 'Error al cargar los departamentos';
+    },
+  });
+}
 
   onSubmit(): void {
     this.errorMessage = '';
@@ -108,7 +111,9 @@ export class CreateUser implements OnInit {
       },
     });
   }
-
+trackByDeptId(index: number, dept: Department): number {
+  return dept.id;
+}
   private resetForm(): void {
     this.name = '';
     this.email = '';
@@ -118,7 +123,6 @@ export class CreateUser implements OnInit {
     this.identification = '';
     this.gender = 'Femenino';
     this.state = 'Activo';
-    this.cd.detectChanges();
     this.department_id = null;
 
   }

@@ -58,15 +58,19 @@
                 </select>
             </label>
 
-            <label>
-                Departamento
-                <select [(ngModel)]="department_id" name="department_id">
-                    <option [ngValue]="null">Selecciona un departamento</option>
-                    <option *ngFor="let dept of departments" [ngValue]="dept.id">
-                        {{ dept.name }}
-                    </option>
-                </select>
-            </label>
+<label>
+    Departamento
+    <select [(ngModel)]="department_id" name="department_id">
+        <option [ngValue]="null">Selecciona un departamento</option>
+        <option *ngFor="let dept of departments; trackBy: trackByDeptId" [ngValue]="dept.id">
+            {{ dept.name }}
+        </option>
+    </select>
+    <!-- Debug temporal -->
+    <small style="display: block; color: gray;">
+        Departamentos cargados: {{ departments.length }}
+    </small>
+</label>
         </div>
 
         <div class="form-actions">
