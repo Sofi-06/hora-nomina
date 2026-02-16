@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, EmailStr
 from typing import Optional, Literal
 import bcrypt
+from routers import director, docente
 
 # Agregar el directorio padre al path para poder importar auth
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -18,6 +19,10 @@ from baseDatos.database import get_database_connection
 load_dotenv()
 
 app = FastAPI()
+
+#Llamado de rutas para las consultas de los otros dos roles
+#app.include_router(director.router)
+#app.include_router(docente.router)
 
 class CreateUserRequest(BaseModel):
     name: str
