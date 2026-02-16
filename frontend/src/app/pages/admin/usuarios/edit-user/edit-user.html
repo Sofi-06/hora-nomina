@@ -1,29 +1,28 @@
 <app-nav-component></app-nav-component>
 
 <div class="create-user-container">
-    <h2><i class="fas fa-user-plus"></i>Crear usuario</h2>
+    <h2><i class="fas fa-user-edit"></i>Editar usuario</h2>
 
-    <div *ngIf="errorMessage" class="message error">{{ errorMessage }}</div>
-    <div *ngIf="successMessage" class="message success">{{ successMessage }}</div>
+    <div *ngIf="isLoadingUser" class="loading">Cargando usuario...</div>
 
-    <form (ngSubmit)="onSubmit()">
+    <form *ngIf="!isLoadingUser" (ngSubmit)="onSubmit()">
+        <div *ngIf="errorMessage" class="message error">{{ errorMessage }}</div>
+        <div *ngIf="successMessage" class="message success">{{ successMessage }}</div>
+
         <div class="form-grid">
             <label>
                 Nombre *
                 <input type="text" [(ngModel)]="name" name="name" required>
-                <small *ngIf="fieldErrors['name']" class="error-text">{{ fieldErrors['name'] }}</small>
             </label>
 
             <label>
                 Email *
                 <input type="email" [(ngModel)]="email" name="email" required>
-                <small *ngIf="fieldErrors['email']" class="error-text">{{ fieldErrors['email'] }}</small>
             </label>
 
             <label>
-                Password *
-                <input type="password" [(ngModel)]="password" name="password" required>
-                <small *ngIf="fieldErrors['password']" class="error-text">{{ fieldErrors['password'] }}</small>
+                Password (dejar vacío para no cambiar)
+                <input type="password" [(ngModel)]="password" name="password" (change)="onPasswordChange()">
             </label>
 
             <label>
@@ -33,7 +32,6 @@
                     <option value="Docente">Docente</option>
                     <option value="Director">Director</option>
                 </select>
-                <small *ngIf="fieldErrors['user_type']" class="error-text">{{ fieldErrors['user_type'] }}</small>
             </label>
 
             <label>
@@ -42,13 +40,11 @@
                     <option value="CC">CC</option>
                     <option value="CE">CE</option>
                 </select>
-                <small *ngIf="fieldErrors['identification_type']" class="error-text">{{ fieldErrors['identification_type'] }}</small>
             </label>
 
             <label>
                 Identificación *
                 <input type="text" [(ngModel)]="identification" name="identification" required>
-                <small *ngIf="fieldErrors['identification']" class="error-text">{{ fieldErrors['identification'] }}</small>
             </label>
 
             <div class="field-block">
@@ -63,40 +59,34 @@
                         <span>Masculino</span>
                     </label>
                 </div>
-                <small *ngIf="fieldErrors['gender']" class="error-text">{{ fieldErrors['gender'] }}</small>
             </div>
 
             <label>
-                Departamento *
-                <select [(ngModel)]="department_id" name="department_id" required>
+                Departamento
+                <select [(ngModel)]="department_id" name="department_id">
                     <option [ngValue]="null">Selecciona un departamento</option>
                     <option *ngFor="let dept of departments; trackBy: trackByDeptId" [ngValue]="dept.id">
                         {{ dept.name }}
                     </option>
                 </select>
-                <small *ngIf="fieldErrors['department_id']" class="error-text">{{ fieldErrors['department_id'] }}</small>
             </label>
 
             <label>
-                Unidades *
+                Unidades
                 <div class="units-container">
                     <div *ngFor="let unit of units; trackBy: trackByUnitId" class="unit-checkbox">
-                        <input 
-                            type="checkbox" 
-                            [id]="'unit_' + unit.id" 
-                            [value]="unit.id"
+                        <input type="checkbox" [id]="'unit_' + unit.id" [value]="unit.id"
                             (change)="$event.target.checked ? unit_ids.push(unit.id) : unit_ids.splice(unit_ids.indexOf(unit.id), 1)"
                             [checked]="unit_ids.includes(unit.id)">
                         <label [for]="'unit_' + unit.id">{{ unit.name }}</label>
                     </div>
                 </div>
-                <small *ngIf="fieldErrors['unit_ids']" class="error-text">{{ fieldErrors['unit_ids'] }}</small>
             </label>
         </div>
 
         <div class="button-group">
             <button type="submit" [disabled]="isLoading">
-                {{ isLoading ? 'Creando...' : 'Crear usuario' }}
+                {{ isLoading ? 'Guardando...' : 'Guardar cambios' }}
             </button>
             <button type="button" (click)="router.navigate(['/usuarios'])">Cancelar</button>
         </div>

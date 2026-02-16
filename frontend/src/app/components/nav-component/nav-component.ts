@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Auth, Usuario } from '../../services/auth';
-import { RouterLink, RouterModule } from '@angular/router';
- 
+import { Router, RouterLink, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-nav-component',
@@ -16,14 +15,24 @@ export class NavComponent implements OnInit {
   dropdownOpen = false;
   usuario: Usuario | null = null;
 
-  constructor(private auth: Auth) {}
+  constructor(
+    private auth: Auth,
+    private router: Router,
+  ) {}
 
   ngOnInit() {
-    this.auth.usuario$.subscribe(usuario => {
+    this.auth.usuario$.subscribe((usuario) => {
       this.usuario = usuario;
     });
   }
 
+  isUsersActive(): boolean {
+    return this.router.url.startsWith('/usuarios') || this.router.url.startsWith('/crearUsuarios') || this.router.url.startsWith('/editarUsuarios');
+  }
+
+  isCodesActive(): boolean {
+  return this.router.url.startsWith('/codigos') || this.router.url.startsWith('/crearCodigos') || this.router.url.startsWith('/editarCodigos');
+}
 
   toggleDropdown(): void {
     this.dropdownOpen = !this.dropdownOpen;
@@ -36,7 +45,5 @@ export class NavComponent implements OnInit {
   logout(): void {
     this.auth.logout();
   }
-  cambioUser(){
-    
-  }
+  cambioUser() {}
 }
