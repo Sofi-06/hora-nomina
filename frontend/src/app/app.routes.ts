@@ -10,9 +10,9 @@ import { EditUser } from './pages/admin/usuarios/edit-user/edit-user';
 import { ListUnits } from './pages/admin/unidades/list-units/list-units';
 import { ListCodes } from './pages/admin/codigos/list-codes/list-codes';
 import { CreateCode } from './pages/admin/codigos/create-code/create-code';
-import { EditCode
+import { EditCode} from './pages/admin/codigos/edit-code/edit-code';
+import { ListDepartments } from './pages/admin/departamentos/list-departments/list-departments';
 
- } from './pages/admin/codigos/edit-code/edit-code';
 export const routes: Routes = [
   {
     path: '',
@@ -61,6 +61,11 @@ export const routes: Routes = [
     {
     path: 'editarCodigos/:id',
     component: EditCode,
+  },
+    //Departamentos
+  {
+    path: 'departamentos',
+    component: ListDepartments,
   },
   {
     path: 'docente',

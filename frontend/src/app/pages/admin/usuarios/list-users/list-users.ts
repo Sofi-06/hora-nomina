@@ -177,7 +177,8 @@ eliminarUsuario(id: number): void {
 
           // 👇 FORZAR DETECCIÓN (importante si usas OnPush)
           this.cd.markForCheck();
-
+          this.cd.detectChanges();
+          
           setTimeout(() => {
             this.successMessage = '';
             this.cd.markForCheck();

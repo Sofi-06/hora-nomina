@@ -1149,3 +1149,430 @@ def delete_code(code_id: int):
             "status": "error",
             "message": str(e)
         }
+        
+        
+@app.post("/admin/codes")
+def create_code(payload: dict):
+    try:
+        conexion = get_database_connection()
+        if not conexion:
+            return {"status": "error", "message": "No se pudo conectar a la base de datos"}
+
+        code = (payload.get("code") or "").strip()
+        name = (payload.get("name") or "").strip()
+        description = (payload.get("description") or "").strip()
+        unit_id = payload.get("unit_id")
+
+        if not code or not name or not description or not unit_id:
+            return {"status": "error", "message": "Todos los campos son obligatorios"}
+
+        if len(code) > 20 or len(name) > 100 or len(description) > 1000:
+            return {"status": "error", "message": "Longitud de campos inválida"}
+
+        cursor = conexion.cursor()
+        cursor.execute("SELECT id FROM units WHERE id = %s", (unit_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {"status": "error", "message": "Unidad no encontrada"}
+
+        cursor.execute("SELECT id FROM codes WHERE code = %s", (code,))
+        if cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {"status": "error", "message": "Ya existe un código con ese valor"}
+
+        now = datetime.now()
+        cursor.execute("""
+            INSERT INTO codes (code, name, description, unit_id, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (code, name, description, unit_id, now, now))
+        code_id = cursor.lastrowid
+
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "message": "Código creado correctamente",
+            "data": {"id": code_id}
+        }
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+    
+@app.get("/admin/codes/{code_id}")
+def get_code(code_id: int):
+    """Obtiene un codigo por ID"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT id, code, name, description, unit_id
+            FROM codes
+            WHERE id = %s
+        """, (code_id,))
+        codigo = cursor.fetchone()
+
+        cursor.close()
+        conexion.close()
+
+        if not codigo:
+            return {
+                "status": "error",
+                "message": "Codigo no encontrado"
+            }
+
+        return {
+            "status": "success",
+            "data": codigo
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.put("/admin/codes/{code_id}")
+def update_code(code_id: int, payload: dict):
+    """Actualiza un codigo existente"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        code = (payload.get("code") or "").strip()
+        name = (payload.get("name") or "").strip()
+        description = (payload.get("description") or "").strip()
+        unit_id = payload.get("unit_id")
+
+        if not code or not name or not description or not unit_id:
+            return {
+                "status": "error",
+                "message": "Todos los campos son obligatorios"
+            }
+
+        if len(code) > 20 or len(name) > 100 or len(description) > 1000:
+            return {
+                "status": "error",
+                "message": "Longitud de campos inválida"
+            }
+
+        cursor = conexion.cursor()
+
+        cursor.execute("SELECT id FROM codes WHERE id = %s", (code_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Codigo no encontrado"
+            }
+
+        cursor.execute("SELECT id FROM units WHERE id = %s", (unit_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Unidad no encontrada"
+            }
+
+        cursor.execute(
+            "SELECT id FROM codes WHERE code = %s AND id != %s",
+            (code, code_id)
+        )
+        if cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Ya existe otro código con ese valor"
+            }
+
+        now = datetime.now()
+        cursor.execute("""
+            UPDATE codes
+            SET code = %s, name = %s, description = %s, unit_id = %s, updated_at = %s
+            WHERE id = %s
+        """, (code, name, description, unit_id, now, code_id))
+
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "message": "Código actualizado correctamente"
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }  
+        
+        
+@app.get("/admin/departments")
+def get_admin_departments():
+    """Obtiene lista de departamentos"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT id, name
+            FROM departments
+            ORDER BY name ASC
+        """)
+        departamentos = cursor.fetchall()
+        
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "data": departamentos
+        }
+
+    except Exception as e:
+        print(f"❌ Error obteniendo departamentos: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.get("/admin/departments/{dept_id}")
+def get_department(dept_id: int):
+    """Obtiene un departamento por ID"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT id, name
+            FROM departments
+            WHERE id = %s
+        """, (dept_id,))
+        departamento = cursor.fetchone()
+
+        cursor.close()
+        conexion.close()
+
+        if not departamento:
+            return {
+                "status": "error",
+                "message": "Departamento no encontrado"
+            }
+
+        return {
+            "status": "success",
+            "data": departamento
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.post("/admin/departments")
+def create_department(payload: dict):
+    """Crea un nuevo departamento"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        name = (payload.get("name") or "").strip()
+
+        if not name:
+            return {
+                "status": "error",
+                "message": "El nombre es obligatorio"
+            }
+
+        if len(name) > 64:
+            return {
+                "status": "error",
+                "message": "El nombre no puede superar 64 caracteres"
+            }
+
+        cursor = conexion.cursor()
+
+        cursor.execute("SELECT id FROM departments WHERE name = %s", (name,))
+        if cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Ya existe un departamento con ese nombre"
+            }
+
+        now = datetime.now()
+        cursor.execute("""
+            INSERT INTO departments (name, created_at, updated_at)
+            VALUES (%s, %s, %s)
+        """, (name, now, now))
+        dept_id = cursor.lastrowid
+
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "message": "Departamento creado correctamente",
+            "data": {"id": dept_id}
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.put("/admin/departments/{dept_id}")
+def update_department(dept_id: int, payload: dict):
+    """Actualiza un departamento"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        name = (payload.get("name") or "").strip()
+
+        if not name:
+            return {
+                "status": "error",
+                "message": "El nombre es obligatorio"
+            }
+
+        if len(name) > 64:
+            return {
+                "status": "error",
+                "message": "El nombre no puede superar 64 caracteres"
+            }
+
+        cursor = conexion.cursor()
+
+        cursor.execute("SELECT id FROM departments WHERE id = %s", (dept_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Departamento no encontrado"
+            }
+
+        cursor.execute(
+            "SELECT id FROM departments WHERE name = %s AND id != %s",
+            (name, dept_id)
+        )
+        if cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Ya existe otro departamento con ese nombre"
+            }
+
+        now = datetime.now()
+        cursor.execute("""
+            UPDATE departments
+            SET name = %s, updated_at = %s
+            WHERE id = %s
+        """, (name, now, dept_id))
+
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "message": "Departamento actualizado correctamente"
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.delete("/admin/departments/{dept_id}")
+def delete_department(dept_id: int):
+    """Elimina un departamento"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor()
+
+        cursor.execute("SELECT id FROM departments WHERE id = %s", (dept_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Departamento no encontrado"
+            }
+
+        cursor.execute("DELETE FROM departments WHERE id = %s", (dept_id,))
+        conexion.commit()
+
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "message": "Departamento eliminado correctamente"
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
