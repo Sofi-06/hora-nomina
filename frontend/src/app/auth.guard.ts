@@ -1,27 +1,25 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { CanActivate, Router, UrlTree } from '@angular/router';
-import { Auth } from './services/auth'
+import { isPlatformBrowser } from '@angular/common';
+import { Auth } from './services/auth';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthGuard implements CanActivate {
+  constructor(
+    private auth: Auth,
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
-  constructor(private auth: Auth, private router: Router) {}
+  canActivate(): boolean | UrlTree {
+    if (!isPlatformBrowser(this.platformId)) {
+      return true; 
+    }
 
-canActivate(): boolean {
-
-  if (this.auth.isAuthenticated()) {
-
-    return true;
-
+    return this.auth.isAuthenticated()
+      ? true
+      : this.router.createUrlTree(['/login']);
   }
-
-  this.router.navigate(['/login']);
-
-  return false;
-
-}
-
-
 }

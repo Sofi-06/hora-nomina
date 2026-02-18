@@ -34,6 +34,9 @@ export class NavComponent implements OnInit {
   return this.router.url.startsWith('/codigos') || this.router.url.startsWith('/crearCodigos') || this.router.url.startsWith('/editarCodigos');
 }
 
+  isActivitiesActive(): boolean {
+  return this.router.url.startsWith('/actividades') || this.router.url.startsWith('/estadoActividades');
+}
   toggleDropdown(): void {
     this.dropdownOpen = !this.dropdownOpen;
   }

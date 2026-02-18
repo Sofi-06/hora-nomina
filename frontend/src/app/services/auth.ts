@@ -77,26 +77,23 @@ export class Auth {
   }
 
 isAuthenticated(): boolean {
-
   if (this.usuarioActual.value) {
     return true;
   }
 
   if (isPlatformBrowser(this.platformId)) {
-
     const usuarioGuardado = localStorage.getItem('usuario');
-
     if (usuarioGuardado) {
-
-      this.usuarioActual.next(JSON.parse(usuarioGuardado));
-
-      return true;
+      try {
+        this.usuarioActual.next(JSON.parse(usuarioGuardado));
+        return true;
+      } catch {
+        localStorage.removeItem('usuario');
+      }
     }
-
   }
 
   return false;
-
 }
 
 

@@ -1602,19 +1602,19 @@ def get_admin_activities():
         cursor = conexion.cursor(dictionary=True)
         cursor.execute("""
            SELECT
-    a.id,
-    u.name AS user_name,
-    d.name AS department,
-    CONCAT(c.code, ' - ', c.name) AS code,
-    a.state,
-    a.created_at,
-    a.updated_at
-FROM activities a
-LEFT JOIN users u ON u.id = a.user_id
-LEFT JOIN departments d ON d.id = u.department_id
-LEFT JOIN types t ON t.id = a.type_id
-LEFT JOIN codes c ON c.id = t.code_id
-ORDER BY a.created_at DESC
+            a.id,
+            u.name AS user_name,
+            d.name AS department,
+            CONCAT(c.code, ' - ', c.name) AS code,
+            a.state,
+            a.created_at,
+            a.updated_at
+            FROM activities a
+            LEFT JOIN users u ON u.id = a.user_id
+            LEFT JOIN departments d ON d.id = u.department_id
+            LEFT JOIN types t ON t.id = a.type_id
+            LEFT JOIN codes c ON c.id = t.code_id
+            ORDER BY a.created_at DESC
         """)
         actividades = cursor.fetchall()
 

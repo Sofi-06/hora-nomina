@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { NavComponent } from '../../../../components/nav-component/nav-component';
 import { Footer } from '../../../../components/footer/footer';
+import { RouterLink } from '@angular/router';
 
 interface ActivityItem {
   id: number;
@@ -18,20 +19,23 @@ interface ActivityItem {
 @Component({
   selector: 'app-list-activities',
   standalone: true,
-  imports: [CommonModule, FormsModule, NavComponent, Footer],
+  imports: [CommonModule, FormsModule, NavComponent, Footer, RouterLink],
   templateUrl: './list-activities.html',
   styleUrl: './list-activities.css',
 })
 export class ListActivities implements OnInit {
   activities: ActivityItem[] = [];
   filtered: ActivityItem[] = [];
+  pagedActivities: ActivityItem[] = [];
   searchTerm = '';
   dateFilter = '';
   loading = false;
   error = '';
-  private apiUrl = 'http://localhost:8000';
+  pageSize: number = 20;
+  currentPage: number = 1;
+  private readonly apiUrl = 'http://localhost:8000';
 
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
+  constructor(private readonly http: HttpClient, private readonly cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.loadActivities();
@@ -47,6 +51,8 @@ export class ListActivities implements OnInit {
           this.applyFilters();
         } else {
           this.error = response.message || 'No se pudieron cargar actividades';
+          this.cdr.detectChanges();
+
         }
         this.loading = false;
         this.cdr.detectChanges();
@@ -76,12 +82,50 @@ export class ListActivities implements OnInit {
 
       return matchesTerm && matchesDate;
     });
+
+    this.currentPage = 1;
+    this.updatePagedActivities();
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filtered.length / this.pageSize));
+  }
+
+  get pageStart(): number {
+    return this.filtered.length === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  get pageEnd(): number {
+    return Math.min(this.currentPage * this.pageSize, this.filtered.length);
+  }
+
+  goToPage(page: number): void {
+    const safePage = Math.min(Math.max(page, 1), this.totalPages);
+    if (safePage === this.currentPage) {
+      return;
+    }
+    this.currentPage = safePage;
+    this.updatePagedActivities();
+  }
+
+  nextPage(): void {
+    this.goToPage(this.currentPage + 1);
+  }
+
+  prevPage(): void {
+    this.goToPage(this.currentPage - 1);
+  }
+
+  private updatePagedActivities(): void {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.pagedActivities = this.filtered.slice(startIndex, endIndex);
   }
 
   formatMonthYear(dateStr: string | null): string {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return '-';
+    if (Number.isNaN(date.getTime())) return '-';
     const months = [
       'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
@@ -92,7 +136,7 @@ export class ListActivities implements OnInit {
   formatRelativeUpdate(dateStr: string | null): string {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return '-';
+    if (Number.isNaN(date.getTime())) return '-';
 
     const diffMs = Date.now() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -107,8 +151,8 @@ export class ListActivities implements OnInit {
     const normalized = state
       .toLowerCase()
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/\s+/g, '-');
+      .replaceAll(/[\u0300-\u036f]/g, '')
+      .replaceAll(/\s+/g, '-');
     return `state-badge state-${normalized}`;
   }
 }

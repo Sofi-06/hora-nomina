@@ -1,91 +1,104 @@
 <app-nav-component></app-nav-component>
 
 <div class="list-users-container">
-  <div class="users-header">
-    <h2 class="users-title">
-      <i class="fas fa-chart-bar"></i> Gestion de Actividades
-    </h2>
+    <div class="users-header">
+        <div class="title-row">
+            <h2 class="users-title">
+                <i class="fas fa-chart-bar"></i> Gestión de Actividades
+            </h2>
 
-    <div class="filters-group">
-      <div class="search-bar">
-        <input
-          type="text"
-          placeholder="Buscar actividad..."
-          [(ngModel)]="searchTerm"
-          (input)="applyFilters()"
-          class="search-input"
-        />
-        <i class="fas fa-search search-icon"></i>
-      </div>
+            <button type="button" class="btn-create btn-extend">
+                <i class="fas fa-expand-arrows-alt"></i> Ampliar plazo
+            </button>
+        </div>
 
-      <div class="search-bar">
-        <input
-          type="date"
-          [(ngModel)]="dateFilter"
-          (change)="applyFilters()"
-          class="search-input"
-        />
-        <i class="fas fa-calendar-alt search-icon"></i>
-      </div>
 
-      <button
-        type="button"
-        class="btn-create btn-clear"
-        (click)="searchTerm=''; dateFilter=''; applyFilters()"
-      >
-        <i class="fas fa-eraser"></i> Limpiar
-      </button>
+        <div class="filters-row">
+
+            <div class="search-field">
+                <i class="fas fa-search search-icon"></i>
+
+                <input type="text" placeholder="Buscar actividad" [(ngModel)]="searchTerm" (input)="applyFilters()"
+                    class="search-input" />
+
+            </div>
+
+            <div class="date-field">
+                <input type="date" [(ngModel)]="dateFilter" (change)="applyFilters()" class="date-input" />
+
+            </div>
+
+            <button type="button" class="btn-create btn-clear btn-date-clear" (click)="dateFilter=''; applyFilters()">
+                <i class="fas fa-eraser"></i> Limpiar
+            </button>
+        </div>
+
     </div>
-  </div>
 
-  <div *ngIf="error" class="error-message">
-    <i class="fas fa-exclamation-circle"></i> {{ error }}
-  </div>
+    <div *ngIf="error" class="error-message">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
 
-  <div *ngIf="loading" class="loading-spinner">
-    <i class="fas fa-spinner fa-spin"></i> Cargando actividades...
-  </div>
+    <div *ngIf="loading" class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i> Cargando actividades...
+    </div>
 
-  <div *ngIf="!loading && filtered.length === 0" class="no-data">
-    <i class="fas fa-inbox"></i>
-    <p>No hay actividades para mostrar</p>
-  </div>
+    <div *ngIf="!loading && filtered.length === 0" class="no-data">
+        <i class="fas fa-inbox"></i>
+        <p>No hay actividades para mostrar</p>
+    </div>
 
-  <div *ngIf="!loading && filtered.length > 0" class="table-wrapper">
-    <table class="users-table">
-      <thead>
-        <tr>
-          <th>Usuario</th>
-          <th>Departamento</th>
-          <th>Codigo</th>
-          <th>Estado</th>
-          <th>Fecha</th>
-          <th>Actualizacion</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let a of filtered" class="user-row">
-          <td class="cell-name">{{ a.user_name || '-' }}</td>
-          <td class="cell-department">{{ a.department || '-' }}</td>
-          <td class="cell-units">{{ a.code || '-' }}</td>
-          <td class="cell-state">
-            <span [ngClass]="getStateClass(a.state)">{{ a.state || '-' }}</span>
-          </td>
-          <td class="cell-date">{{ formatMonthYear(a.created_at) }}</td>
-          <td class="cell-date">{{ formatRelativeUpdate(a.updated_at) }}</td>
-          <td class="cell-actions">
-            <button class="btn-edit" type="button" title="Editar">
-              <i class="fas fa-edit"></i>
+    <div *ngIf="!loading && filtered.length > 0" class="table-wrapper">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Departamento</th>
+                    <th>Codigo</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Actualizacion</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let a of pagedActivities" class="user-row">
+                    <td class="cell-name">{{ a.user_name || '-' }}</td>
+                    <td class="cell-department">{{ a.department || '-' }}</td>
+                    <td class="cell-units">{{ a.code || '-' }}</td>
+                    <td class="cell-state">
+                        <span [ngClass]="getStateClass(a.state)">{{ a.state || '-' }}</span>
+                    </td>
+                    <td class="cell-date">{{ formatMonthYear(a.created_at) }}</td>
+                    <td class="cell-date">{{ formatRelativeUpdate(a.updated_at) }}</td>
+                    <td class="cell-actions">
+                        <button class="btn-edit" type="button" title="Editar" routerLink="/estadoActividades/{{a.id}}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-delete" type="button" title="Descargar">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div *ngIf="!loading && filtered.length > 0" class="users-footer">
+        <p>
+            Mostrando <strong>{{ pageStart }}</strong>-<strong>{{ pageEnd }}</strong>
+            de <strong>{{ filtered.length }}</strong> actividades
+        </p>
+        <div class="pagination">
+            <button type="button" class="pagination-btn" [disabled]="currentPage === 1" (click)="prevPage()">
+                Anterior
             </button>
-            <button class="btn-delete" type="button" title="Descargar">
-              <i class="fas fa-download"></i>
+            <span class="pagination-info">Página {{ currentPage }} de {{ totalPages }}</span>
+            <button type="button" class="pagination-btn" [disabled]="currentPage === totalPages" (click)="nextPage()">
+                Siguiente
             </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+        </div>
+    </div>
 </div>
 
 <app-footer></app-footer>

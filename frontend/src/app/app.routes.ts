@@ -14,6 +14,7 @@ import { EditCode} from './pages/admin/codigos/edit-code/edit-code';
 import { ListDepartments } from './pages/admin/departamentos/list-departments/list-departments';
 import { ListActivities } from './pages/admin/actividades/list-activities/list-activities';
 import { AuthGuard } from './auth.guard';
+import { StateActivities } from './pages/admin/actividades/state-activities/state-activities';
 
 export const routes: Routes = [
   {
@@ -89,6 +90,11 @@ export const routes: Routes = [
     path: 'actividades',
     component: ListActivities,
     canActivate: [AuthGuard]
+  },
+  {
+    path: 'estadoActividades/:id',
+    component: StateActivities,
+
   },
     {
     path: 'director',
