@@ -6,23 +6,66 @@
     <div *ngIf="errorMessage" class="message error">{{ errorMessage }}</div>
     <div *ngIf="successMessage" class="message success">{{ successMessage }}</div>
 
-    <form (ngSubmit)="onSubmit()">
+    <form (ngSubmit)="onSubmit()" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <!-- Campos señuelo para desviar autofill del navegador -->
+        <input
+            type="text"
+            name="fake_user_name"
+            autocomplete="username"
+            tabindex="-1"
+            aria-hidden="true"
+            style="position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0;"
+        />
+        <input
+            type="password"
+            name="fake_user_password"
+            autocomplete="current-password"
+            tabindex="-1"
+            aria-hidden="true"
+            style="position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0;"
+        />
+
         <div class="form-grid">
             <label>
                 Nombre *
-                <input type="text" [(ngModel)]="name" name="name" required>
+                <input
+                    type="text"
+                    [(ngModel)]="name"
+                    name="create_user_full_name"
+                    autocomplete="new-password"
+                    readonly
+                    (focus)="$any($event.target).removeAttribute('readonly')"
+                    required
+                >
                 <small *ngIf="fieldErrors['name']" class="error-text">{{ fieldErrors['name'] }}</small>
             </label>
 
             <label>
                 Email *
-                <input type="email" [(ngModel)]="email" name="email" required>
+                <input
+                    type="text"
+                    inputmode="email"
+                    [(ngModel)]="email"
+                    name="create_user_email_address"
+                    autocomplete="new-password"
+                    readonly
+                    (focus)="$any($event.target).removeAttribute('readonly')"
+                    required
+                >
                 <small *ngIf="fieldErrors['email']" class="error-text">{{ fieldErrors['email'] }}</small>
             </label>
 
             <label>
                 Password *
-                <input type="password" [(ngModel)]="password" name="password" required>
+                <input
+                    type="password"
+                    [(ngModel)]="password"
+                    name="create_user_password_value"
+                    autocomplete="new-password"
+                    readonly
+                    (focus)="$any($event.target).removeAttribute('readonly')"
+                    required
+                >
                 <small *ngIf="fieldErrors['password']" class="error-text">{{ fieldErrors['password'] }}</small>
             </label>
 
@@ -47,7 +90,15 @@
 
             <label>
                 Identificación *
-                <input type="text" [(ngModel)]="identification" name="identification" required>
+                <input
+                    type="text"
+                    [(ngModel)]="identification"
+                    name="create_user_identification_number"
+                    autocomplete="new-password"
+                    readonly
+                    (focus)="$any($event.target).removeAttribute('readonly')"
+                    required
+                >
                 <small *ngIf="fieldErrors['identification']" class="error-text">{{ fieldErrors['identification'] }}</small>
             </label>
 
@@ -81,9 +132,9 @@
                 Unidades *
                 <div class="units-container">
                     <div *ngFor="let unit of units; trackBy: trackByUnitId" class="unit-checkbox">
-                        <input 
-                            type="checkbox" 
-                            [id]="'unit_' + unit.id" 
+                        <input
+                            type="checkbox"
+                            [id]="'unit_' + unit.id"
                             [value]="unit.id"
                             (change)="$event.target.checked ? unit_ids.push(unit.id) : unit_ids.splice(unit_ids.indexOf(unit.id), 1)"
                             [checked]="unit_ids.includes(unit.id)">

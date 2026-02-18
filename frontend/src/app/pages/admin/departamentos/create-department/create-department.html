@@ -1,1 +1,30 @@
-<p>create-department works!</p>
+<div class="create-department-form">
+    <div *ngIf="error" class="alert alert-error">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
+
+    <div *ngIf="successMessage" class="alert alert-success">
+        <i class="fas fa-check-circle"></i> {{ successMessage }}
+    </div>
+
+    <form (ngSubmit)="crearDepartamento()">
+        <div class="form-group">
+            <label for="name">
+                <i class="fas fa-sitemap"></i> Nombre del Departamento *
+            </label>
+            <input type="text" id="name" name="name" [(ngModel)]="name" placeholder="Ej: Ingeniería de Sistemas"
+                class="form-control" [disabled]="loading" required />
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn-cancel" (click)="cancelar()" [disabled]="loading">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button type="submit" class="btn-submit" [disabled]="loading || !name">
+                <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
+                <i class="fas fa-save" *ngIf="!loading"></i>
+                {{ loading ? 'Guardando...' : 'Guardar Departamento' }}
+            </button>
+        </div>
+    </form>
+</div>

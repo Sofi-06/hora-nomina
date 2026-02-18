@@ -1341,10 +1341,18 @@ def get_admin_departments():
 
         cursor = conexion.cursor(dictionary=True)
         cursor.execute("""
-            SELECT id, name
-            FROM departments
-            ORDER BY name ASC
-        """)
+            SELECT
+            d.id,
+            d.name,
+            COUNT(u.id) AS total_docentes
+            FROM departments d
+            LEFT JOIN users u
+            ON u.department_id = d.id
+            AND u.user_type = 'Docente'
+            GROUP BY d.id, d.name
+            ORDER BY d.name ASC
+            """)
+        
         departamentos = cursor.fetchall()
         
         cursor.close()
