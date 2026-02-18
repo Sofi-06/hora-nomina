@@ -12,6 +12,7 @@ import { ListCodes } from './pages/admin/codigos/list-codes/list-codes';
 import { CreateCode } from './pages/admin/codigos/create-code/create-code';
 import { EditCode} from './pages/admin/codigos/edit-code/edit-code';
 import { ListDepartments } from './pages/admin/departamentos/list-departments/list-departments';
+import { ListActivities } from './pages/admin/actividades/list-activities/list-activities';
 
 export const routes: Routes = [
   {
@@ -71,8 +72,13 @@ export const routes: Routes = [
     path: 'docente',
     component: Docente,
   },
+  //Actividades
   {
+    path: 'actividades',
+    component: ListActivities,
+  },
+    {
     path: 'director',
     component: Director,
-  },
+  }, 
 ];

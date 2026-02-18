@@ -38,7 +38,7 @@ export class Login {
         this.isLoading = false;
 
         if (response.status === 'success' && response.usuario) {
-          // Guardar en localStorage
+          
           if (typeof window !== 'undefined') {
             localStorage.setItem('usuario', JSON.stringify(response.usuario));
           }

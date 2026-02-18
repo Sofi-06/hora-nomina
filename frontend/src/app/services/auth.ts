@@ -1,6 +1,6 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient} from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { Observable, BehaviorSubject, throwError, timeout, catchError, TimeoutError } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 
@@ -29,6 +29,8 @@ export class Auth {
 
   private activeNavSection = new BehaviorSubject<number>(0);
   public activeNavSection$ = this.activeNavSection.asObservable();
+
+  private readonly SESSION_KEY = 'auth_token';
 
   constructor(
     private http: HttpClient,
@@ -104,13 +106,14 @@ export class Auth {
         this.router.navigate(['/home']);
     }
   }
+
   actualizarUsuario(usuario: Usuario): void {
     this.usuarioActual.next(usuario);
   }
 
   setActiveNavSection(section: number): void {
-  this.activeNavSection.next(section);
-}
+    this.activeNavSection.next(section);
+  }
 }
 
 

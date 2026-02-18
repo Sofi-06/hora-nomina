@@ -1071,14 +1071,15 @@ def get_admin_codes():
         cursor = conexion.cursor(dictionary=True)
         cursor.execute("""
             SELECT
-                c.id,
-                c.code,
-                c.name,
-                u.name AS unit,
-                COUNT(DISTINCT a.id) AS activities
+            c.id,
+            c.code,
+            c.name,
+            u.name AS unit,
+            COUNT(DISTINCT t.id) AS types,
+            GROUP_CONCAT(DISTINCT t.name ORDER BY t.name SEPARATOR ', ') AS type_names
             FROM codes c
             LEFT JOIN units u ON u.id = c.unit_id
-            LEFT JOIN activities a ON a.type_id = c.id
+            LEFT JOIN types t ON t.code_id = c.id
             GROUP BY c.id
             ORDER BY c.code ASC
         """)
@@ -1580,6 +1581,53 @@ def delete_department(dept_id: int):
         }
 
     except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+        
+        
+@app.get("/admin/activities")
+def get_admin_activities():
+    """Obtiene lista de actividades para admin"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("""
+           SELECT
+    a.id,
+    u.name AS user_name,
+    d.name AS department,
+    CONCAT(c.code, ' - ', c.name) AS code,
+    a.state,
+    a.created_at,
+    a.updated_at
+FROM activities a
+LEFT JOIN users u ON u.id = a.user_id
+LEFT JOIN departments d ON d.id = u.department_id
+LEFT JOIN types t ON t.id = a.type_id
+LEFT JOIN codes c ON c.id = t.code_id
+ORDER BY a.created_at DESC
+        """)
+        actividades = cursor.fetchall()
+
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "data": actividades
+        }
+
+    except Exception as e:
+        print(f"Error obteniendo actividades: {e}")
         return {
             "status": "error",
             "message": str(e)

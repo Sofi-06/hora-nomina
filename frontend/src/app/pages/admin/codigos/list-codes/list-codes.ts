@@ -11,7 +11,7 @@ interface CodeItem {
   code: string;
   name: string;
   unit: string | null;
-  activities: number;
+  types: number;
 }
 
 @Component({
