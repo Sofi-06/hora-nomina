@@ -168,20 +168,15 @@ eliminarUsuario(id: number): void {
       next: (response) => {
 
         if (response.status === 'success') {
-
-          // 👇 Crear NUEVA referencia del array
-          const nuevosUsuarios = this.usuarios.filter(u => u.id !== id);
-          this.usuarios = nuevosUsuarios;
-
+          this.usuarios = this.usuarios.filter(u => u.id !== id);
+          this.usuariosFiltered = this.usuariosFiltered.filter(u => u.id !== id);
+          this.updatePagedUsuarios();
           this.successMessage = 'Usuario eliminado correctamente';
-
-          // 👇 FORZAR DETECCIÓN (importante si usas OnPush)
-          this.cd.markForCheck();
           this.cd.detectChanges();
           
           setTimeout(() => {
             this.successMessage = '';
-            this.cd.markForCheck();
+            this.cd.detectChanges();
           }, 3000);
         }
       },
