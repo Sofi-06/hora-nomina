@@ -13,6 +13,7 @@ import { CreateCode } from './pages/admin/codigos/create-code/create-code';
 import { EditCode} from './pages/admin/codigos/edit-code/edit-code';
 import { ListDepartments } from './pages/admin/departamentos/list-departments/list-departments';
 import { ListActivities } from './pages/admin/actividades/list-activities/list-activities';
+import { AuthGuard } from './auth.guard';
 
 export const routes: Routes = [
   {
@@ -27,58 +28,71 @@ export const routes: Routes = [
   {
     path: 'home',
     component: Home,
+    canActivate: [AuthGuard]
   },
   {
     path: 'admin',
     component: Admin,
+    canActivate: [AuthGuard]
   },
   // Rutas Admin
   {
     path: 'usuarios',
     component: ListUsers,
+    canActivate: [AuthGuard]
   },
   {
     path: 'crearUsuarios',
     component: CreateUser,
+    canActivate: [AuthGuard]
   },
   {
     path: 'editarUsuarios/:id',
     component: EditUser,
+    canActivate: [AuthGuard]
   },
   //Unidades
   {
     path: 'unidades',
     component: ListUnits,
+    canActivate: [AuthGuard]
   },
     //Codigos
   {
     path: 'codigos',
     component: ListCodes,
+    canActivate: [AuthGuard]
   },
     {
     path: 'crearCodigos',
     component: CreateCode,
+    canActivate: [AuthGuard]
   },
     {
     path: 'editarCodigos/:id',
     component: EditCode,
+    canActivate: [AuthGuard]
   },
     //Departamentos
   {
     path: 'departamentos',
     component: ListDepartments,
+    canActivate: [AuthGuard]
   },
   {
     path: 'docente',
     component: Docente,
+    canActivate: [AuthGuard]
   },
   //Actividades
   {
     path: 'actividades',
     component: ListActivities,
+    canActivate: [AuthGuard]
   },
     {
     path: 'director',
     component: Director,
+    canActivate: [AuthGuard]
   }, 
 ];

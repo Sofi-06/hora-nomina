@@ -43,7 +43,6 @@ export class Login {
             localStorage.setItem('usuario', JSON.stringify(response.usuario));
           }
 
-          // 👇 ACTUALIZAR el BehaviorSubject para notificar a los componentes
           this.auth.actualizarUsuario(response.usuario);
 
           this.redirectByRole(response.usuario.role);

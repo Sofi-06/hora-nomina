@@ -30,7 +30,6 @@ export class Auth {
   private activeNavSection = new BehaviorSubject<number>(0);
   public activeNavSection$ = this.activeNavSection.asObservable();
 
-  private readonly SESSION_KEY = 'auth_token';
 
   constructor(
     private http: HttpClient,
@@ -77,9 +76,29 @@ export class Auth {
     return this.usuarioActual.value;
   }
 
-  isAuthenticated(): boolean {
-    return this.usuarioActual.value !== null;
+isAuthenticated(): boolean {
+
+  if (this.usuarioActual.value) {
+    return true;
   }
+
+  if (isPlatformBrowser(this.platformId)) {
+
+    const usuarioGuardado = localStorage.getItem('usuario');
+
+    if (usuarioGuardado) {
+
+      this.usuarioActual.next(JSON.parse(usuarioGuardado));
+
+      return true;
+    }
+
+  }
+
+  return false;
+
+}
+
 
   getDashboardMetrics(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/admin/dashboard-metrics`).pipe(
@@ -90,8 +109,7 @@ export class Auth {
       }),
     );
   }
-
-  private redirigirPorRol(rol: string): void {
+/*  private redirigirPorRol(rol: string): void {
     switch (rol.toLowerCase()) {
       case 'admin':
         this.router.navigate(['/admin']);
@@ -105,7 +123,8 @@ export class Auth {
       default:
         this.router.navigate(['/home']);
     }
-  }
+  } */
+
 
   actualizarUsuario(usuario: Usuario): void {
     this.usuarioActual.next(usuario);
@@ -114,6 +133,49 @@ export class Auth {
   setActiveNavSection(section: number): void {
     this.activeNavSection.next(section);
   }
+
+  cargarUsuarioDesdeStorage(): void {
+
+  if (isPlatformBrowser(this.platformId)) {
+
+    const usuarioGuardado = localStorage.getItem('usuario');
+
+    if (usuarioGuardado) {
+
+      this.usuarioActual.next(JSON.parse(usuarioGuardado));
+
+    }
+
+  }
+
 }
+
+initAuth(): Promise<void> {
+
+  return new Promise((resolve) => {
+
+    if (isPlatformBrowser(this.platformId)) {
+
+      const usuarioGuardado = localStorage.getItem('usuario');
+
+      if (usuarioGuardado) {
+
+        this.usuarioActual.next(JSON.parse(usuarioGuardado));
+
+      }
+
+    }
+
+    resolve();
+
+  });
+
+}
+
+
+
+}
+
+
 
 
