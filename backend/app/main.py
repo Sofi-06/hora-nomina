@@ -15,6 +15,8 @@ import unicodedata
 from fastapi.responses import FileResponse
 from fastapi import Response
 import urllib.parse
+from fastapi.responses import StreamingResponse
+import urllib.parse
 from routers import director, docente
 
 # Agregar el directorio padre al path para poder importar auth
@@ -1738,8 +1740,8 @@ def descargar_archivo(id: int):
         if not os.path.exists(ruta):
             raise HTTPException(status_code=404, detail=f"Archivo no encontrado en: {ruta}")
 
-        return FileResponse(
-    path=ruta,
+        return StreamingResponse(
+    open(ruta, "rb"),
     media_type="application/octet-stream",
     headers={
         "Content-Disposition": f"attachment; filename*=UTF-8''{urllib.parse.quote(archivo)}"
