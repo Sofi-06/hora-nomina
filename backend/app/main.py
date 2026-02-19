@@ -10,6 +10,11 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, EmailStr
 from typing import Optional, Literal
 import bcrypt
+from fastapi.responses import FileResponse
+import unicodedata
+from fastapi.responses import FileResponse
+from fastapi import Response
+import urllib.parse
 from routers import director, docente
 
 # Agregar el directorio padre al path para poder importar auth
@@ -21,6 +26,9 @@ from baseDatos.database import get_database_connection
 load_dotenv()
 
 app = FastAPI()
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 
 
 #Llamado de rutas para las consultas de los otros dos roles
@@ -1693,65 +1701,55 @@ def update_activity_state(activity_id: int, payload: UpdateActivityStatePayload)
     finally:
         cur.close()
         conn.close()
-        
+
+
+    # Antes del endpoint /descargar
+def limpiar_nombre(nombre: str) -> str:
+    nombre = unicodedata.normalize('NFKD', nombre)
+    nombre = nombre.encode('ascii', 'ignore').decode('ascii')
+    return nombre
+    
 @app.get("/descargar/{id}")
 def descargar_archivo(id: int):
-
     try:
-
         conn = get_database_connection()
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT evidence_file FROM activities WHERE id=%s",
+            "SELECT evidence_file, user_id FROM activities WHERE id=%s",
             (id,)
         )
 
         resultado = cursor.fetchone()
-
         cursor.close()
         conn.close()
 
+        if not resultado or not resultado[0]:
+            raise HTTPException(status_code=404, detail="No existe registro en BD")
 
-        if not resultado:
-
-            raise HTTPException(
-                status_code=404,
-                detail="No existe"
-            )
-
-
-        # resultado es una tupla → ('archivo.pdf',)
         archivo = resultado[0]
+        user_id = resultado[1]
 
+        # Carpetas organizadas por user_id
+        ruta = os.path.join(UPLOAD_DIR, str(user_id), archivo)
 
-        ruta = os.path.join("uploads", archivo)
-
+        print(f"Buscando archivo en: {ruta}")
 
         if not os.path.exists(ruta):
-
-            raise HTTPException(
-                status_code=404,
-                detail="Archivo no existe en el servidor"
-            )
-
+            raise HTTPException(status_code=404, detail=f"Archivo no encontrado en: {ruta}")
 
         return FileResponse(
+    path=ruta,
+    media_type="application/octet-stream",
+    headers={
+        "Content-Disposition": f"attachment; filename*=UTF-8''{urllib.parse.quote(archivo)}"
+    }
+)
 
-            path=ruta,
-
-            media_type="application/octet-stream",
-
-            filename=archivo
-
-        )
-
-
+    except HTTPException:
+        raise
     except Exception as e:
-
         print("ERROR:", e)
-
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    

@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { NavComponent } from '../../../../components/nav-component/nav-component';
 import { Footer } from '../../../../components/footer/footer';
 import { Archivo } from '../../../../archivo';
+
 @Component({
   selector: 'app-state-activities',
   standalone: true,
@@ -57,18 +58,20 @@ export class StateActivities implements OnInit {
     this.http.get<any>(`${this.apiUrl}/admin/activities/${this.activityId}`).subscribe({
       next: (res) => {
         const data = res?.data ?? res;
-        this.activity = {
-          user_name: data?.user_name ?? '',
-          code: data?.code ?? '',
-          dedicated_hours: data?.dedicated_hours ?? '',
-          description: data?.description ?? '',
-          document_name: data?.document_name ?? data?.document_url ?? '',
-          document_url: data?.document_url ?? '',
-          month: data?.month ?? '',
-          created_at: data?.created_at ?? '',
-          state: data?.state ?? '',
-          observations: data?.observations ?? '',
-        };
+this.activity = {
+  id: data?.id ?? 0,                          // <-- faltaba
+  evidence_file: data?.evidence_file ?? '',   // <-- faltaba
+  user_name: data?.user_name ?? '',
+  code: data?.code ?? '',
+  dedicated_hours: data?.dedicated_hours ?? '',
+  description: data?.description ?? '',
+  document_name: data?.document_name ?? data?.document_url ?? '',
+  document_url: data?.document_url ?? '',
+  month: data?.month ?? '',
+  created_at: data?.created_at ?? '',
+  state: data?.state ?? '',
+  observations: data?.observations ?? '',
+};
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -138,6 +141,7 @@ export class StateActivities implements OnInit {
   }
 
   descargar(id: number, nombre: string) {
+    console.log('ID a descargar:', id, typeof id);
 
   this.archivo.descargarArchivo(id).subscribe((blob: Blob) => {
 
