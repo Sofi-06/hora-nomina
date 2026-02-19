@@ -27,8 +27,8 @@
                 <input type="date" [(ngModel)]="dateFilter" (change)="applyFilters()" class="date-input" />
 
             </div>
-
-            <button type="button" class="btn-create btn-clear btn-date-clear" (click)="dateFilter=''; applyFilters()">
+            <button type="button" class="btn-create btn-clear btn-date-clear"
+                (click)="dateFilter=''; searchTerm=''; applyFilters()">
                 <i class="fas fa-eraser"></i> Limpiar
             </button>
         </div>
@@ -72,10 +72,11 @@
                     <td class="cell-date">{{ formatMonthYear(a.created_at) }}</td>
                     <td class="cell-date">{{ formatRelativeUpdate(a.updated_at) }}</td>
                     <td class="cell-actions">
-                        <button class="btn-edit" type="button" title="Editar" routerLink="/estadoActividades/{{a.id}}">
+                        <button class="btn-edit" type="button" [routerLink]="['/estadoActividades', a.id]"
+                            title="Revisar actividad">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn-delete" type="button" title="Descargar">
+                        <button class="btn-download" type="button" title="Descargar">
                             <i class="fas fa-download"></i>
                         </button>
                     </td>

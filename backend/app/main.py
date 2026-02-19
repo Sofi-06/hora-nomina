@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 import sys
 import os
 from dotenv import load_dotenv
@@ -19,6 +21,7 @@ from baseDatos.database import get_database_connection
 load_dotenv()
 
 app = FastAPI()
+
 
 #Llamado de rutas para las consultas de los otros dos roles
 #app.include_router(director.router)
@@ -1586,6 +1589,7 @@ def delete_department(dept_id: int):
             "message": str(e)
         }
         
+        # ===== ENDPOINTS PARA ACTIVIDADES =====
         
 @app.get("/admin/activities")
 def get_admin_activities():
@@ -1632,3 +1636,122 @@ def get_admin_activities():
             "status": "error",
             "message": str(e)
         }
+class UpdateActivityStatePayload(BaseModel):
+    state: str
+    observations: Optional[str] = None
+
+@app.get("/admin/activities/{activity_id}")
+def get_activity_by_id(activity_id: int):
+    conn = get_database_connection()
+    cur = conn.cursor(dictionary=True)
+    try:
+        cur.execute("""
+            SELECT
+                a.id,
+                u.name AS user_name,
+                CONCAT(c.code, ' - ', c.name) AS code,
+                a.hours AS dedicated_hours,
+                a.description,
+                a.evidence_file AS document_name,
+                a.evidence_file AS document_url,
+                a.month,
+                a.created_at,
+                a.state,
+                a.observations
+            FROM activities a
+            JOIN users u ON u.id = a.user_id
+            LEFT JOIN types t ON t.id = a.type_id
+            LEFT JOIN codes c ON c.id = t.code_id
+            WHERE a.id = %s
+        """, (activity_id,))
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Actividad no encontrada")
+        return row
+    finally:
+        cur.close()
+        conn.close()
+
+@app.put("/admin/activities/{activity_id}/state")
+def update_activity_state(activity_id: int, payload: UpdateActivityStatePayload):
+    conn = get_database_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            UPDATE activities
+            SET state = %s,
+                observations = %s,
+                updated_at = NOW()
+            WHERE id = %s
+        """, (payload.state, payload.observations, activity_id))
+        conn.commit()
+
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Actividad no encontrada")
+
+        return {"message": "Estado actualizado correctamente"}
+    finally:
+        cur.close()
+        conn.close()
+        
+@app.get("/descargar/{id}")
+def descargar_archivo(id: int):
+
+    try:
+
+        conn = get_database_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT evidence_file FROM activities WHERE id=%s",
+            (id,)
+        )
+
+        resultado = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+
+        if not resultado:
+
+            raise HTTPException(
+                status_code=404,
+                detail="No existe"
+            )
+
+
+        # resultado es una tupla → ('archivo.pdf',)
+        archivo = resultado[0]
+
+
+        ruta = os.path.join("uploads", archivo)
+
+
+        if not os.path.exists(ruta):
+
+            raise HTTPException(
+                status_code=404,
+                detail="Archivo no existe en el servidor"
+            )
+
+
+        return FileResponse(
+
+            path=ruta,
+
+            media_type="application/octet-stream",
+
+            filename=archivo
+
+        )
+
+
+    except Exception as e:
+
+        print("ERROR:", e)
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
