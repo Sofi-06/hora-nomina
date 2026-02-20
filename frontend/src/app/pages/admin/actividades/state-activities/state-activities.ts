@@ -140,24 +140,17 @@ this.activity = {
     if (url) window.open(url, '_blank', 'noopener');
   }
 
-  descargar(id: number, nombre: string) {
-    console.log('ID a descargar:', id, typeof id);
+descargar(id: number, nombre: string) {
+  console.log('ID a descargar:', id, typeof id);
 
   this.archivo.descargarArchivo(id).subscribe((blob: Blob) => {
-
     const url = window.URL.createObjectURL(blob);
-
     const a = document.createElement('a');
-
     a.href = url;
-
-    a.download = nombre;
-
+    a.download = nombre;  // nombre viene de activity.evidence_file
+    console.log('Nombre archivo:', nombre);
     a.click();
-
     window.URL.revokeObjectURL(url);
-
   });
-
 }
 }

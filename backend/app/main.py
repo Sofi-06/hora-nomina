@@ -1615,20 +1615,21 @@ def get_admin_activities():
 
         cursor = conexion.cursor(dictionary=True)
         cursor.execute("""
-           SELECT
-            a.id,
-            u.name AS user_name,
-            d.name AS department,
-            CONCAT(c.code, ' - ', c.name) AS code,
-            a.state,
-            a.created_at,
-            a.updated_at
-            FROM activities a
-            LEFT JOIN users u ON u.id = a.user_id
-            LEFT JOIN departments d ON d.id = u.department_id
-            LEFT JOIN types t ON t.id = a.type_id
-            LEFT JOIN codes c ON c.id = t.code_id
-            ORDER BY a.created_at DESC
+        SELECT
+    a.id,
+    a.evidence_file,
+    u.name AS user_name,
+    d.name AS department,
+    CONCAT(c.code, ' - ', c.name) AS code,
+    a.state,
+    a.created_at,
+    a.updated_at
+    FROM activities a
+    LEFT JOIN users u ON u.id = a.user_id
+    LEFT JOIN departments d ON d.id = u.department_id
+    LEFT JOIN types t ON t.id = a.type_id
+    LEFT JOIN codes c ON c.id = t.code_id
+    ORDER BY a.created_at DESC
         """)
         actividades = cursor.fetchall()
 
@@ -1656,24 +1657,25 @@ def get_activity_by_id(activity_id: int):
     cur = conn.cursor(dictionary=True)
     try:
         cur.execute("""
-            SELECT
-                a.id,
-                u.name AS user_name,
-                CONCAT(c.code, ' - ', c.name) AS code,
-                a.hours AS dedicated_hours,
-                a.description,
-                a.evidence_file AS document_name,
-                a.evidence_file AS document_url,
-                a.month,
-                a.created_at,
-                a.state,
-                a.observations
-            FROM activities a
-            JOIN users u ON u.id = a.user_id
-            LEFT JOIN types t ON t.id = a.type_id
-            LEFT JOIN codes c ON c.id = t.code_id
-            WHERE a.id = %s
-        """, (activity_id,))
+    SELECT
+        a.id,
+        a.evidence_file,          -- <-- agrega esto
+        u.name AS user_name,
+        CONCAT(c.code, ' - ', c.name) AS code,
+        a.hours AS dedicated_hours,
+        a.description,
+        a.evidence_file AS document_name,
+        a.evidence_file AS document_url,
+        a.month,
+        a.created_at,
+        a.state,
+        a.observations
+    FROM activities a
+    JOIN users u ON u.id = a.user_id
+    LEFT JOIN types t ON t.id = a.type_id
+    LEFT JOIN codes c ON c.id = t.code_id
+    WHERE a.id = %s
+""", (activity_id,))
         row = cur.fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Actividad no encontrada")

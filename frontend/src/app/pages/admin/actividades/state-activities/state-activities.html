@@ -25,7 +25,7 @@
         <div *ngIf="activity.document_url; else noDoc" class="doc-content">
           <span class="doc-name">{{ activity.document_name || activity.document_url }}</span>
           <div class="doc-actions">
-          <button (click)="descargar(activity.id, activity.evidence_file)">
+<button (click)="descargar(activity.id, activity.evidence_file)" class="doc-btn">
   Descargar
 </button>
             <button type="button" class="doc-btn" (click)="openDocument()">Visualizar</button>
