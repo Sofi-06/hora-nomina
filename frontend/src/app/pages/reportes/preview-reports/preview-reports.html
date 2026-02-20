@@ -1,0 +1,57 @@
+<app-nav-component></app-nav-component>
+
+<main class="preview-reports-container">
+  <div class="header">
+    <h1>Reportes</h1>
+    <button class="btn-download" (click)="descargarExcel()">
+      <i class="fas fa-download"></i> Descargar Excel Temporal
+    </button>
+  </div>
+
+  <p class="subtitle">Previsualización de los filtros seleccionados</p>
+
+  <div *ngIf="loading" class="loading">
+    <p>Cargando datos...</p>
+  </div>
+
+  <div *ngIf="error && !loading" class="error-message">
+    <p>{{ error }}</p>
+  </div>
+
+  <div *ngIf="!loading && activities.length > 0" class="table-wrapper">
+    <table class="activities-table">
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Departamento</th>
+          <th>Actividad</th>
+          <th>Descripción</th>
+          <th>Fecha envío</th>
+          <th>Mes</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let activity of activities" class="activity-row">
+          <td>{{ activity.user_name }}</td>
+          <td>{{ activity.department }}</td>
+          <td>{{ activity.code }}</td>
+          <td>{{ activity.description }}</td>
+          <td>{{ formatDate(activity.created_at) }}</td>
+          <td>{{ getMonthName(activity.created_at) }}</td>
+          <td>
+            <span class="state-badge" [ngClass]="'state-' + activity.state.toLowerCase()">
+              {{ activity.state }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="!loading && activities.length === 0 && !error" class="no-data">
+    <p>No hay datos que mostrar con los filtros seleccionados</p>
+  </div>
+</main>
+
+<app-footer></app-footer>

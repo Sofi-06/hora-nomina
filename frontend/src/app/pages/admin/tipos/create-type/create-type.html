@@ -1,0 +1,67 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="close()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>
+        <i class="fas fa-tag"></i> Crear tipo de actividad
+      </h3>
+      <button class="close-btn" (click)="close()" title="Cerrar">×</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Error message -->
+      <div *ngIf="error" class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        <p>{{ error }}</p>
+      </div>
+
+      <!-- Form -->
+      <div class="form-group">
+        <label for="id-codigo">
+          <i class="fas fa-link"></i> ID Código asociado
+        </label>
+        <input
+          id="id-codigo"
+          type="number"
+          [value]="codeId"
+          disabled
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="nombre">
+          <i class="fas fa-signature"></i> Nombre
+        </label>
+        <input
+          id="nombre"
+          type="text"
+          [(ngModel)]="name"
+          placeholder="Digite el nombre del tipo de actividad"
+          class="form-input"
+          [disabled]="loading"
+        />
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button
+        type="button"
+        class="btn-cancel"
+        (click)="close()"
+        [disabled]="loading"
+      >
+        <i class="fas fa-times"></i> Volver
+      </button>
+      <button
+        type="button"
+        class="btn-accept"
+        (click)="agregar()"
+        [disabled]="loading || !name.trim()"
+      >
+        <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
+        <i class="fas fa-plus" *ngIf="!loading"></i>
+        {{ loading ? 'Agregando...' : 'Agregar' }}
+      </button>
+    </div>
+  </div>
+</div>

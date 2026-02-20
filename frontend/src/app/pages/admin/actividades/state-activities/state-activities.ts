@@ -20,6 +20,7 @@ export class StateActivities implements OnInit {
   activityId!: number;
   loading = false;
   saving = false;
+  visualizing = false;
   error = '';
 
   activity: any = {
@@ -128,29 +129,75 @@ this.activity = {
     return `${weekday} ${day} de ${month} de ${year} ${time}`;
   }
 
-  getDocumentUrl(): string {
-    const rawUrl = this.activity.document_url || '';
-    if (!rawUrl) return '';
-    if (/^https?:\/\//i.test(rawUrl)) return rawUrl;
-    return `${this.apiUrl}/uploads/${encodeURIComponent(rawUrl)}`;
+  //-------------------------------------------------------
+
+  visualizar(): void {
+    if (this.visualizing) return;
+
+    const id = this.activity.id;
+    const nombre = this.activity.evidence_file || this.activity.document_name || '';
+
+    if (!id) {
+      alert('ID de actividad no válido');
+      return;
+    }
+
+    // Verificar extensión antes de hacer la petición
+    const ext = (nombre || '').toLowerCase().split('.').pop() || '';
+    if (!['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) {
+      alert(`Los archivos .${ext} no se pueden visualizar en el navegador.\nPor favor, use el botón "Descargar".`);
+      return;
+    }
+
+    this.visualizing = true;
+
+    this.archivo.visualizarArchivo(id).subscribe({
+      next: (blob: Blob) => {
+        const mime = blob.type || this.getMimeTypeFromName(nombre);
+        const blobFinal = mime && blob.type !== mime 
+          ? new Blob([blob], { type: mime }) 
+          : blob;
+
+        const url = window.URL.createObjectURL(blobFinal);
+        window.open(url, '_blank', 'noopener,noreferrer');
+
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+          this.visualizing = false;
+        }, 1000);
+      },
+      error: () => {
+        alert('Error al visualizar archivo');
+        this.visualizing = false;
+      }
+    });
   }
 
-  openDocument(): void {
-    const url = this.getDocumentUrl();
-    if (url) window.open(url, '_blank', 'noopener');
+  private getMimeTypeFromName(nombre: string): string {
+    const ext = (nombre || '').toLowerCase().split('.').pop() || '';
+    const map: Record<string, string> = {
+      pdf: 'application/pdf',
+      png: 'image/png',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      gif: 'image/gif',
+      webp: 'image/webp',
+      svg: 'image/svg+xml'
+    };
+    return map[ext] || 'application/octet-stream';
   }
 
-descargar(id: number, nombre: string) {
-  console.log('ID a descargar:', id, typeof id);
+  descargar(id: number, nombre: string): void {
+    console.log('ID a descargar:', id, typeof id);
 
-  this.archivo.descargarArchivo(id).subscribe((blob: Blob) => {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = nombre;  // nombre viene de activity.evidence_file
-    console.log('Nombre archivo:', nombre);
-    a.click();
-    window.URL.revokeObjectURL(url);
-  });
-}
+    this.archivo.descargarArchivo(id).subscribe((blob: Blob) => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombre;  
+      console.log('Nombre archivo:', nombre);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
+  }
 }

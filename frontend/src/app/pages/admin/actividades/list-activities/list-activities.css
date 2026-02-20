@@ -23,6 +23,12 @@
   width: 100%;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .btn-create {
   display: inline-flex;
   align-items: center;
@@ -130,6 +136,24 @@
   height: 42px;
   padding: 0 12px;
   margin-left: 4px;
+}
+
+.btn-report-icon {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  justify-content: center;
+  border-color: #1f6feb;
+  background: #1f6feb;
+}
+
+.btn-report-icon:hover {
+  background: #1a56b3;
+  border-color: #1a56b3;
+}
+
+.btn-report-icon i {
+  font-size: 20px;
 }
 
 .search-icon {
@@ -463,6 +487,15 @@ app-footer {
   .btn-extend {
     min-width: 120px;
     justify-content: center;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .btn-report-icon {
+    min-width: 48px;
   }
 
   .users-title {

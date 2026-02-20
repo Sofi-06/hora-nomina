@@ -20,6 +20,14 @@ export class Archivo {
 
   }
 
+  visualizarArchivo(id: number): Observable<Blob> {
+
+    return this.http.get(
+      `http://localhost:8000/visualizar/${id}`,
+      {
+        responseType: 'blob'
+      }
+    );
+
+  }
 }
-
-

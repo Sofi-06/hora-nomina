@@ -27,9 +27,9 @@ export class ListCodes implements OnInit {
   searchTerm: string = '';
   loading = false;
   error = '';
-  private apiUrl = 'http://localhost:8000';
+  private readonly apiUrl = 'http://localhost:8000';
 
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
+  constructor(private readonly http: HttpClient, private readonly cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.loadCodes();

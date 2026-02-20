@@ -6,6 +6,7 @@ import { NavComponent } from '../../../../components/nav-component/nav-component
 import { Footer } from '../../../../components/footer/footer';
 import { RouterLink } from '@angular/router';
 import { Archivo } from '../../../../archivo';
+import { ExtendDate } from '../extend-date/extend-date';
 
 interface ActivityItem {
   id: number;
@@ -21,7 +22,7 @@ interface ActivityItem {
 @Component({
   selector: 'app-list-activities',
   standalone: true,
-  imports: [CommonModule, FormsModule, NavComponent, Footer, RouterLink],
+  imports: [CommonModule, FormsModule, NavComponent, Footer, RouterLink, ExtendDate],
   templateUrl: './list-activities.html',
   styleUrl: './list-activities.css',
 })
@@ -39,6 +40,8 @@ export class ListActivities implements OnInit {
 
   pageSize = 20;
   currentPage = 1;
+
+  showExtendModal = false;
 
   private readonly apiUrl = 'http://localhost:8000';
 
@@ -157,6 +160,15 @@ export class ListActivities implements OnInit {
   }
 
 
+  openExtendModal(): void {
+    this.showExtendModal = true;
+  }
+
+  closeExtendModal(): void {
+    this.showExtendModal = false;
+  }
+
+
   private updatePagedActivities(): void {
 
     const start = (this.currentPage - 1) * this.pageSize;
@@ -202,6 +214,76 @@ export class ListActivities implements OnInit {
 
     });
 
+  }
+
+
+  get totalPages(): number {
+    const total = this.filtered.length;
+    if (!total) return 1;
+    const size = this.pageSize;
+    return Math.max(1, Math.ceil(total / size));
+  }
+
+  get pageStart(): number {
+    const total = this.filtered.length;
+    if (!total) return 0;
+    const size = this.pageSize;
+    return (this.currentPage - 1) * size + 1;
+  }
+
+  get pageEnd(): number {
+    const size = this.pageSize;
+    return Math.min(this.currentPage * size, this.filtered.length);
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.updatePagedActivities();
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.updatePagedActivities();
+    }
+  }
+
+  getStateClass(state?: string | null): string {
+    const s = (state ?? '').toLowerCase();
+    if (['activo', 'active', 'aprobado', 'enabled'].includes(s)) return 'state-active';
+    if (['inactivo', 'inactive', 'rechazado', 'disabled'].includes(s)) return 'state-inactive';
+    if (['pendiente', 'pending'].includes(s)) return 'state-pending';
+    return 'state-default';
+  }
+
+  formatMonthYear(value?: string | Date | null): string {
+    if (!value) return '-';
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return '-';
+    return new Intl.DateTimeFormat('es-ES', {
+      month: 'long',
+      year: 'numeric',
+    }).format(d);
+  }
+
+  formatRelativeUpdate(value?: string | Date | null): string {
+    if (!value) return '-';
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return '-';
+
+    const diffMs = Date.now() - d.getTime();
+    const min = Math.floor(diffMs / 60000);
+    const h = Math.floor(min / 60);
+    const day = Math.floor(h / 24);
+
+    if (min < 1) return 'Justo ahora';
+    if (min < 60) return `Hace ${min} min`;
+    if (h < 24) return `Hace ${h} h`;
+    if (day < 30) return `Hace ${day} d`;
+
+    return d.toLocaleDateString('es-ES');
   }
 
 }

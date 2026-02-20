@@ -31,11 +31,11 @@ export class NavComponent implements OnInit {
   }
 
   isCodesActive(): boolean {
-  return this.router.url.startsWith('/codigos') || this.router.url.startsWith('/crearCodigos') || this.router.url.startsWith('/editarCodigos');
-}
+    return this.router.url.startsWith('/codigos') || this.router.url.startsWith('/crearCodigos') || this.router.url.startsWith('/editarCodigos') || this.router.url.startsWith('/verActividades');
+  }
 
   isActivitiesActive(): boolean {
-  return this.router.url.startsWith('/actividades') || this.router.url.startsWith('/estadoActividades');
+  return this.router.url.startsWith('/actividades') || this.router.url.startsWith('/estadoActividades') || this.router.url.startsWith('/reportes') || this.router.url.startsWith('/verReportes');
 }
   toggleDropdown(): void {
     this.dropdownOpen = !this.dropdownOpen;

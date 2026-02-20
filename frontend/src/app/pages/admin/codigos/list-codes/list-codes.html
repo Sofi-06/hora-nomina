@@ -50,7 +50,7 @@
                     <td class="cell-unit">{{ codigo.unit || '-' }}</td>
                     <td class="cell-activities">{{ codigo.types }}</td>
                     <td class="cell-actions">
-                        <button class="btn-view" type="button" title="Ver actividades">
+                        <button class="btn-view" type="button" title="Ver actividades" routerLink="/verActividades/{{codigo.id}}">
                             <i class="fas fa-list"></i>
                         </button>
                         <button class="btn-edit" type="button" title="Editar codigo" routerLink="/editarCodigos/{{codigo.id}}">

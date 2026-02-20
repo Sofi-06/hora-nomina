@@ -1,0 +1,248 @@
+:host {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.reportes-container {
+  padding: 30px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  margin: 20px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.reportes-header {
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 14px;
+}
+
+.reportes-header h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reportes-body {
+  margin-top: 20px;
+}
+
+.reportes-subtitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #3f464d;
+  margin: 0 0 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 22px;
+}
+
+.filter-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  padding: 18px;
+}
+
+.filter-card h3 {
+  margin: 0;
+  font-size: 22px;
+  color: #2c3e50;
+}
+
+.filter-card p {
+  margin: 14px 0;
+  padding-top: 12px;
+  border-top: 1px solid #ececec;
+  color: #4f5964;
+  line-height: 1.35;
+  font-size: 14px;
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #2f3740;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.space-top {
+  margin-top: 14px;
+}
+
+.field-input {
+  width: 100%;
+  height: 42px;
+  border: 2px solid #d8dce0;
+  border-radius: 7px;
+  padding: 0 12px;
+  font-size: 15px;
+  color: #2c3e50;
+  background: #fff;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: #1f6feb;
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.12);
+}
+
+.field-input:disabled {
+  background: #edf1f5;
+  color: #5f6b76;
+  cursor: not-allowed;
+}
+
+.actions-row {
+  margin-top: 24px;
+  border-top: 1px solid #e6e6e6;
+  padding-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn-cancel {
+  border: 1px solid #dc3545;
+  border-radius: 8px;
+  height: 42px;
+  padding: 0 14px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #dc3545;
+}
+
+.btn-cancel:hover {
+  background: #bd2130;
+  border-color: #bd2130;
+}
+
+.btn-preview {
+  border: 1px solid #28a745;
+  border-radius: 8px;
+  height: 42px;
+  padding: 0 14px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #28a745;
+}
+
+.btn-preview:hover {
+  background: #218838;
+  border-color: #218838;
+}
+
+.btn-generate {
+  border: 1px solid #1f6feb;
+  border-radius: 8px;
+  height: 42px;
+  padding: 0 14px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #1f6feb;
+}
+
+.btn-generate:hover {
+  background: #1a56b3;
+  border-color: #1a56b3;
+}
+
+.btn-cancel:disabled,
+.btn-preview:disabled,
+.btn-generate:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background-color: #ffebee;
+  border-left: 4px solid #dc3545;
+  padding: 15px;
+  border-radius: 6px;
+  color: #c62828;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 16px;
+  color: #666;
+}
+
+.loading-spinner i {
+  margin-right: 10px;
+  font-size: 20px;
+  color: #007bff;
+}
+
+app-footer {
+  margin-top: auto;
+}
+
+@media (max-width: 1024px) {
+  .reportes-subtitle {
+    font-size: 17px;
+  }
+
+  .actions-row {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .reportes-container {
+    padding: 18px;
+  }
+
+  .reportes-header h2 {
+    font-size: 22px;
+  }
+
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions-row {
+    flex-direction: column;
+  }
+
+  .btn-action {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -1,0 +1,98 @@
+<app-nav-component></app-nav-component>
+
+<div class="reportes-container">
+	<div class="reportes-header">
+		<h2><i class="fas fa-chart-line"></i> Reportes</h2>
+	</div>
+
+	<div class="reportes-body">
+		<p class="reportes-subtitle">
+			Seleccione los campos que desea sean incluidos dentro del reporte de Excel
+		</p>
+
+		<div *ngIf="error" class="error-message">
+			<i class="fas fa-exclamation-circle"></i> {{ error }}
+		</div>
+
+		<div *ngIf="loading" class="loading-spinner">
+			<i class="fas fa-spinner fa-spin"></i> Cargando opciones...
+		</div>
+
+		<div *ngIf="!loading" class="filters-grid">
+			<section class="filter-card">
+				<h3>Fecha</h3>
+				<p>Exportar información entre fechas determinadas por el usuario</p>
+
+				<label class="check-row">
+					<input type="checkbox" [(ngModel)]="useDateStart" />
+					<span>Fecha inicio</span>
+				</label>
+				<input type="date" class="field-input" [(ngModel)]="startDate" [disabled]="!useDateStart" />
+
+				<label class="check-row space-top">
+					<input type="checkbox" [(ngModel)]="useDateEnd" />
+					<span>Fecha final</span>
+				</label>
+				<input type="date" class="field-input" [(ngModel)]="endDate" [disabled]="!useDateEnd" />
+			</section>
+
+			<section class="filter-card">
+				<h3>Estado</h3>
+				<p>Exportar información según el estado de la evidencia</p>
+
+				<label class="check-row">
+					<input type="checkbox" [(ngModel)]="useState" />
+					<span>Estado</span>
+				</label>
+				<select class="field-input" [(ngModel)]="selectedState" [disabled]="!useState">
+					<option value="" disabled>Seleccione el estado</option>
+					<option *ngFor="let state of stateOptions" [value]="state.name">{{ state.name }}</option>
+				</select>
+			</section>
+
+			<section class="filter-card">
+				<h3>Departamento</h3>
+				<p>Exportar información por departamento o facultad</p>
+
+				<label class="check-row">
+					<input type="checkbox" [(ngModel)]="useDepartment" />
+					<span>Departamento</span>
+				</label>
+				<select class="field-input" [(ngModel)]="selectedDepartment" [disabled]="!useDepartment">
+					<option value="" disabled>Seleccione el departamento</option>
+					<option *ngFor="let dept of departmentOptions" [value]="dept.name">{{ dept.name }}</option>
+				</select>
+			</section>
+
+			<section class="filter-card">
+				<h3>Unidad</h3>
+				<p>Exportar información por unidad (incluye todos los códigos)</p>
+
+				<label class="check-row">
+					<input type="checkbox" [(ngModel)]="useUnit" />
+					<span>Unidad</span>
+				</label>
+				<select class="field-input" [(ngModel)]="selectedUnit" [disabled]="!useUnit">
+					<option value="" disabled>Seleccione la unidad</option>
+					<option *ngFor="let unit of unitOptions" [value]="unit.name">{{ unit.name }}</option>
+				</select>
+			</section>
+		</div>
+
+		<div *ngIf="!loading" class="actions-row">
+			<button type="button" class="btn-cancel" (click)="clearFilters()">
+				<i class="fas fa-times"></i> Cancelar
+			</button>
+			<button type="button" class="btn-preview" (click)="previsualizarReporte()"
+				[disabled]="!hasAnyFilterEnabled()" [routerLink]="['/verReportes']">
+				<i class="fas fa-eye"></i> Previsualizar
+			</button>
+			<button type="button" class="btn-generate" (click)="generarReporte()"
+				[disabled]="!hasAnyFilterEnabled()">
+				<i class="fas fa-download"></i> Generar
+			</button>
+		</div>
+	</div>
+</div>
+
+<app-footer></app-footer>

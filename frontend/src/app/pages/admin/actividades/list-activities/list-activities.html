@@ -7,9 +7,15 @@
                 <i class="fas fa-chart-bar"></i> Gestión de Actividades
             </h2>
 
-            <button type="button" class="btn-create btn-extend">
-                <i class="fas fa-expand-arrows-alt"></i> Ampliar plazo
-            </button>
+            <div class="header-actions">
+                <button type="button" class="btn-create btn-extend" (click)="openExtendModal()">
+                    <i class="fas fa-expand-arrows-alt"></i> Ampliar plazo
+                </button>
+                <button type="button" class="btn-create btn-report-icon" [routerLink]="['/reportes']" title="Reportes"
+                    aria-label="Ir a reportes">
+                    <i class="fas fa-chart-line"></i>
+                </button>
+            </div>
         </div>
 
 
@@ -76,15 +82,13 @@
                             title="Revisar actividad">
                             <i class="fas fa-edit"></i>
                         </button>
-<button
-  class="btn-download"
-  type="button"
-  title="Descargar"
-  (click)="descargar(a.id, a.evidence_file)">
-
-  <i class="fas fa-download"></i>
-
-</button>
+                        <button
+                          class="btn-download"
+                          type="button"
+                          title="Descargar"
+                          (click)="descargar(a.id, a.evidence_file)">
+                          <i class="fas fa-download"></i>
+                        </button>
                     </td>
                 </tr>
             </tbody>
@@ -107,5 +111,10 @@
         </div>
     </div>
 </div>
+
+<app-extend-date 
+  [isOpen]="showExtendModal" 
+  (closeModal)="closeExtendModal()">
+</app-extend-date>
 
 <app-footer></app-footer>

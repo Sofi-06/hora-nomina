@@ -1,0 +1,82 @@
+<app-nav-component></app-nav-component>
+
+<div class="view-types-container">
+  <div class="types-header">
+    <h2 class="types-title" *ngIf="code">
+      <i class="fas fa-tags"></i> Tipos de actividades - {{ code.code }} {{ code.name }}
+    </h2>
+
+    <button class="btn-create" (click)="crearTipo()" *ngIf="!loading && !error">
+      <i class="fas fa-plus"></i> Crear tipo
+    </button>
+  </div>
+
+  <!-- Loading spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <i class="fas fa-spinner fa-spin"></i>
+    <p>Cargando tipos...</p>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="error && !loading" class="error-message">
+    <i class="fas fa-exclamation-circle"></i> {{ error }}
+  </div>
+
+  <!-- Tabla de tipos -->
+  <div *ngIf="!loading && !error && types.length > 0" class="table-wrapper">
+    <table class="types-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre del tipo</th>
+          <th>Actividades creadas</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let type of types" class="type-row">
+          <td class="cell-id">{{ type.id }}</td>
+          <td class="cell-name">{{ type.name }}</td>
+          <td class="cell-activities">{{ type.activities_count }}</td>
+          <td class="cell-actions">
+            <button class="btn-edit" title="Editar" (click)="editarTipo(type)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn-delete" title="Eliminar" (click)="eliminarTipo(type.id)">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Sin tipos -->
+  <div *ngIf="!loading && !error && types.length === 0" class="empty-state">
+    <i class="fas fa-inbox"></i>
+    <p>No hay tipos registrados para este código</p>
+    <p class="empty-hint">Haz clic en "Crear tipo" para agregar uno</p>
+  </div>
+</div>
+
+<!-- Modal crear tipo -->
+<app-create-type
+  [isOpen]="isCreateTypeOpen"
+  [codeId]="codeId || 0"
+  [codeName]="(code?.id || 0).toString()"
+  (closeModal)="closeCreateTypeModal()"
+  (typeCreated)="onTypeCreated($event)"
+></app-create-type>
+
+<!-- Modal editar tipo -->
+<app-edit-type
+  [isOpen]="isEditTypeOpen"
+  [codeId]="code?.id || 0"
+  [codeName]="(code?.id || 0).toString()"
+  [typeId]="selectedType?.id || 0"
+  [typeName]="selectedType?.name || ''"
+  (closeModal)="closeEditTypeModal()"
+  (typeUpdated)="onTypeUpdated($event)"
+></app-edit-type>
+
+<app-footer></app-footer>

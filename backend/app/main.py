@@ -1163,6 +1163,70 @@ def delete_code(code_id: int):
             "status": "error",
             "message": str(e)
         }
+
+
+@app.get("/admin/codes/{code_id}/types")
+def get_types_by_code(code_id: int):
+    """Obtiene todos los tipos asociados a un codigo específico con cantidad de actividades"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        
+        # Verificar que el codigo existe
+        cursor.execute("SELECT id, code, name FROM codes WHERE id = %s", (code_id,))
+        codigo = cursor.fetchone()
+        
+        if not codigo:
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Codigo no encontrado"
+            }
+        
+        # Obtener los tipos asociados con conteo de actividades
+        cursor.execute("""
+            SELECT 
+                t.id, 
+                t.name, 
+                t.code_id, 
+                COUNT(a.id) as activities_count,
+                t.created_at, 
+                t.updated_at
+            FROM types t
+            LEFT JOIN activities a ON t.id = a.type_id
+            WHERE t.code_id = %s
+            GROUP BY t.id
+            ORDER BY t.name ASC
+        """, (code_id,))
+        tipos = cursor.fetchall()
+
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "data": {
+                "code": codigo,
+                "types": tipos
+            }
+        }
+
+    except Exception as e:
+        print(f"❌ Error obteniendo tipos: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "message": str(e)
+        }
         
         
 @app.post("/admin/codes")
@@ -1602,8 +1666,14 @@ def delete_department(dept_id: int):
         # ===== ENDPOINTS PARA ACTIVIDADES =====
         
 @app.get("/admin/activities")
-def get_admin_activities():
-    """Obtiene lista de actividades para admin"""
+def get_admin_activities(
+    fecha_inicio: str = None,
+    fecha_final: str = None,
+    estado: str = None,
+    departamento: str = None,
+    unidad: str = None
+):
+    """Obtiene lista de actividades para admin con filtros opcionales"""
     try:
         conexion = get_database_connection()
 
@@ -1614,23 +1684,44 @@ def get_admin_activities():
             }
 
         cursor = conexion.cursor(dictionary=True)
-        cursor.execute("""
+        
+        # Base query with unit joins
+        query = """
         SELECT
-    a.id,
-    a.evidence_file,
-    u.name AS user_name,
-    d.name AS department,
-    CONCAT(c.code, ' - ', c.name) AS code,
-    a.state,
-    a.created_at,
-    a.updated_at
-    FROM activities a
-    LEFT JOIN users u ON u.id = a.user_id
-    LEFT JOIN departments d ON d.id = u.department_id
-    LEFT JOIN types t ON t.id = a.type_id
-    LEFT JOIN codes c ON c.id = t.code_id
-    ORDER BY a.created_at DESC
-        """)
+            a.id,
+            a.evidence_file,
+            u.name AS user_name,
+            d.name AS department,
+            CONCAT(c.code, ' - ', c.name) AS code,
+            a.state,
+            a.description,
+            a.created_at,
+            a.updated_at
+        FROM activities a
+        LEFT JOIN users u ON u.id = a.user_id
+        LEFT JOIN departments d ON d.id = u.department_id
+        LEFT JOIN types t ON t.id = a.type_id
+        LEFT JOIN codes c ON c.id = t.code_id
+        LEFT JOIN unit_user uu ON uu.user_id = u.id
+        LEFT JOIN units un ON un.id = uu.unit_id
+        WHERE 1=1
+        """
+        
+        # Add optional filters
+        if fecha_inicio:
+            query += f" AND DATE(a.created_at) >= '{fecha_inicio}'"
+        if fecha_final:
+            query += f" AND DATE(a.created_at) <= '{fecha_final}'"
+        if estado:
+            query += f" AND a.state = '{estado}'"
+        if departamento:
+            query += f" AND d.name = '{departamento}'"
+        if unidad:
+            query += f" AND un.name = '{unidad}'"
+        
+        query += " ORDER BY a.created_at DESC"
+        
+        cursor.execute(query)
         actividades = cursor.fetchall()
 
         cursor.close()
@@ -1643,6 +1734,10 @@ def get_admin_activities():
 
     except Exception as e:
         print(f"Error obteniendo actividades: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
         return {
             "status": "error",
             "message": str(e)
@@ -1755,5 +1850,275 @@ def descargar_archivo(id: int):
     except Exception as e:
         print("ERROR:", e)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/visualizar/{id}")
+def visualizar_archivo(id: int):
+    """Endpoint para visualizar archivo en el navegador (inline)."""
+    try:
+        conn = get_database_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT evidence_file, user_id FROM activities WHERE id=%s",
+            (id,)
+        )
+
+        resultado = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if not resultado or not resultado[0]:
+            raise HTTPException(status_code=404, detail="No existe registro en BD")
+
+        archivo = resultado[0]
+        user_id = resultado[1]
+
+        ruta = os.path.join(UPLOAD_DIR, str(user_id), archivo)
+
+        if not os.path.exists(ruta):
+            raise HTTPException(status_code=404, detail=f"Archivo no encontrado: {ruta}")
+
+        # Detectar MIME type por extensión
+        ext = archivo.lower().split('.')[-1] if '.' in archivo else ''
+        mime_map = {
+            'pdf': 'application/pdf',
+            'png': 'image/png',
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'gif': 'image/gif',
+            'webp': 'image/webp',
+            'svg': 'image/svg+xml'
+        }
+        media_type = mime_map.get(ext, 'application/octet-stream')
+
+        return StreamingResponse(
+            open(ruta, "rb"),
+            media_type=media_type,
+            headers={
+                "Content-Disposition": f"inline; filename*=UTF-8''{urllib.parse.quote(archivo)}"
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print("ERROR visualizar:", e)
+        raise HTTPException(status_code=500, detail=str(e))
     
+    #====== ENDPOINTS PARA TIPOS =====
+    
+@app.post("/admin/types")
+def create_type(payload: dict):
+    """Crea un nuevo tipo de actividad asociado a un código"""
+    try:
+        conexion = get_database_connection()
+        
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        
+        # Validar inputs
+        name = (payload.get("name") or "").strip()
+        code_id = payload.get("code_id")
+        
+        if not name or not code_id:
+            return {
+                "status": "error",
+                "message": "Nombre y código son requeridos"
+            }
+        
+        # Verificar que el código existe
+        cursor.execute("SELECT id FROM codes WHERE id = %s", (code_id,))
+        codigo = cursor.fetchone()
+        
+        if not codigo:
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Código no encontrado"
+            }
+        
+        # Insertar el nuevo tipo
+        cursor.execute("""
+            INSERT INTO types (name, code_id, created_at, updated_at)
+            VALUES (%s, %s, NOW(), NOW())
+        """, (name, code_id))
+        
+        conexion.commit()
+        type_id = cursor.lastrowid
+        
+        cursor.close()
+        conexion.close()
+        
+        print(f"✅ Tipo {name} creado para código {code_id}")
+        
+        return {
+            "status": "success",
+            "message": "Tipo creado correctamente",
+            "type": {
+                "id": type_id,
+                "name": name,
+                "code_id": code_id,
+                "created_at": None,
+                "updated_at": None
+            }
+        }
+    
+    except Exception as e:
+        print(f"❌ Error creando tipo: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.delete("/admin/types/{type_id}")
+def delete_type(type_id: int):
+    """Elimina un tipo de actividad por ID"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor()
+
+        # Verificar que el tipo existe
+        cursor.execute("SELECT id FROM types WHERE id = %s", (type_id,))
+        tipo = cursor.fetchone()
+
+        if not tipo:
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Tipo no encontrado"
+            }
+
+        # Eliminar el tipo
+        cursor.execute("DELETE FROM types WHERE id = %s", (type_id,))
+        conexion.commit()
+
+        cursor.close()
+        conexion.close()
+
+        print(f"✅ Tipo {type_id} eliminado")
+
+        return {
+            "status": "success",
+            "message": f"Tipo {type_id} eliminado correctamente"
+        }
+
+    except Exception as e:
+        print(f"❌ Error eliminando tipo: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.put("/admin/types/{type_id}")
+def update_type(type_id: int, data: dict):
+    """Actualiza un tipo de actividad por ID"""
+    try:
+        name = data.get("name")
+        
+        if not name or not isinstance(name, str) or len(name.strip()) == 0:
+            return {
+                "status": "error",
+                "message": "El nombre del tipo es requerido"
+            }
+        
+        conexion = get_database_connection()
+        
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+        
+        cursor = conexion.cursor(dictionary=True)
+        
+        # Verificar que el tipo existe
+        cursor.execute("SELECT id, code_id, name FROM types WHERE id = %s", (type_id,))
+        tipo = cursor.fetchone()
+        
+        if not tipo:
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Tipo no encontrado"
+            }
+        
+        # Actualizar el tipo
+        cursor.execute(
+            "UPDATE types SET name = %s, updated_at = NOW() WHERE id = %s",
+            (name.strip(), type_id)
+        )
+        conexion.commit()
+        
+        cursor.close()
+        conexion.close()
+        
+        print(f"✅ Tipo {type_id} actualizado")
+        
+        return {
+            "status": "success",
+            "message": f"Tipo actualizado correctamente",
+            "type": {
+                "id": tipo["id"],
+                "code_id": tipo["code_id"],
+                "name": name.strip()
+            }
+        }
+    
+    except Exception as e:
+        print(f"❌ Error actualizando tipo: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+        
+        
+    # ===== ENDPOINTS PARA REPORTES =====
+
+@app.get("/admin/activity-states")
+def get_activity_states():
+    """Obtiene los estados disponibles de actividades"""
+    try:
+        states = [
+            "Aprobado",
+            "Revisión",
+            "Desaprobado",
+            "Reenviado",
+            "Con observaciones"
+        ]
+        
+        return {
+            "status": "success",
+            "data": [{"name": state} for state in states]
+        }
+    
+    except Exception as e:
+        print(f"❌ Error obteniendo estados: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
     

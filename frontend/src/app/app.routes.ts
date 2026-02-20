@@ -15,6 +15,9 @@ import { ListDepartments } from './pages/admin/departamentos/list-departments/li
 import { ListActivities } from './pages/admin/actividades/list-activities/list-activities';
 import { AuthGuard } from './auth.guard';
 import { StateActivities } from './pages/admin/actividades/state-activities/state-activities';
+import { ViewTypes } from './pages/admin/tipos/view-types/view-types';
+import { Reportes } from './pages/reportes/reportes';
+import { PreviewReports } from './pages/reportes/preview-reports/preview-reports';
 
 export const routes: Routes = [
   {
@@ -74,6 +77,11 @@ export const routes: Routes = [
     component: EditCode,
     canActivate: [AuthGuard]
   },
+  {
+    path: 'verActividades/:id',
+    component: ViewTypes,
+    canActivate: [AuthGuard]
+  },
     //Departamentos
   {
     path: 'departamentos',
@@ -95,6 +103,16 @@ export const routes: Routes = [
     path: 'estadoActividades/:id',
     component: StateActivities,
 
+  },
+  {
+    path: 'reportes',
+    component: Reportes,
+    canActivate: [AuthGuard]
+  },
+    {
+    path: 'verReportes',
+    component: PreviewReports,
+    canActivate: [AuthGuard]
   },
     {
     path: 'director',
