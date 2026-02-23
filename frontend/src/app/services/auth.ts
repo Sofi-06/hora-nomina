@@ -1,6 +1,6 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient} from '@angular/common/http';
-import { Router, CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, throwError, timeout, catchError, TimeoutError } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 
@@ -76,6 +76,46 @@ export class Auth {
     return this.usuarioActual.value;
   }
 
+  redirigirPorRol(rol: string): void {
+    switch ((rol || '').toLowerCase()) {
+      case 'admin':
+        this.router.navigate(['/admin']);
+        break;
+      case 'docente':
+        this.router.navigate(['/docente']);
+        break;
+      case 'director':
+        this.router.navigate(['/director']);
+        break;
+      default:
+        this.router.navigate(['/home']);
+    }
+  }
+
+  redirigirUsuarioActual(): void {
+    const usuario = this.getUsuarioActual();
+    if (usuario?.role) {
+      this.redirigirPorRol(usuario.role);
+      return;
+    }
+
+    if (isPlatformBrowser(this.platformId)) {
+      const usuarioGuardado = localStorage.getItem('usuario');
+      if (usuarioGuardado) {
+        try {
+          const parsed = JSON.parse(usuarioGuardado) as Usuario;
+          this.usuarioActual.next(parsed);
+          this.redirigirPorRol(parsed.role);
+          return;
+        } catch {
+          localStorage.removeItem('usuario');
+        }
+      }
+    }
+
+    this.router.navigate(['/login']);
+  }
+
 isAuthenticated(): boolean {
   if (this.usuarioActual.value) {
     return true;
@@ -106,23 +146,6 @@ isAuthenticated(): boolean {
       }),
     );
   }
-/*  private redirigirPorRol(rol: string): void {
-    switch (rol.toLowerCase()) {
-      case 'admin':
-        this.router.navigate(['/admin']);
-        break;
-      case 'docente':
-        this.router.navigate(['/docente']);
-        break;
-      case 'director':
-        this.router.navigate(['/director']);
-        break;
-      default:
-        this.router.navigate(['/home']);
-    }
-  } */
-
-
   actualizarUsuario(usuario: Usuario): void {
     this.usuarioActual.next(usuario);
   }

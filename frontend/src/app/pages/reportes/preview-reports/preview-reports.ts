@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { NavComponent } from '../../../components/nav-component/nav-component';
@@ -11,6 +11,7 @@ interface Activity {
   evidence_file: string;
   user_name: string;
   department: string;
+  unit?: string;
   code: string;
   state: string;
   description: string;
@@ -31,6 +32,7 @@ export class PreviewReports implements OnInit {
   private readonly route: ActivatedRoute;
 
   activities: Activity[] = [];
+  private currentFilters: Record<string, string> = {};
   loading = false;
   error = '';
 
@@ -51,9 +53,15 @@ export class PreviewReports implements OnInit {
     try {
       // Get query parameters from route
       const queryParams = this.route.snapshot.queryParams;
+      this.currentFilters = Object.entries(queryParams).reduce((acc, [key, value]) => {
+        if (value !== null && value !== undefined && String(value).trim() !== '') {
+          acc[key] = String(value);
+        }
+        return acc;
+      }, {} as Record<string, string>);
       
       // Build query string from parameters
-      const queryString = Object.entries(queryParams)
+      const queryString = Object.entries(this.currentFilters)
         .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
         .join('&');
 
@@ -78,8 +86,30 @@ export class PreviewReports implements OnInit {
   }
 
   descargarExcel(): void {
-    // TODO: Implement Excel download functionality
-    console.log('Descargar Excel con datos filtrados');
+    let params = new HttpParams();
+
+    for (const [key, value] of Object.entries(this.currentFilters)) {
+      params = params.set(key, value);
+    }
+
+    this.http.get(`${this.apiUrl}/admin/reports/excel`, {
+      params,
+      responseType: 'blob'
+    }).subscribe({
+      next: (blob: Blob) => {
+        const downloadUrl = globalThis.URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = downloadUrl;
+        anchor.download = `reporte_actividades_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        anchor.click();
+        globalThis.URL.revokeObjectURL(downloadUrl);
+      },
+      error: (err) => {
+        console.error('Error descargando Excel:', err);
+        this.error = 'No se pudo descargar el archivo Excel';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   getMonthName(dateString: string): string {

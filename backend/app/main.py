@@ -1,28 +1,25 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
 import sys
 import os
 from dotenv import load_dotenv
 import mysql.connector
-from datetime import datetime, timedelta
-from pydantic import BaseModel, EmailStr
+from datetime import datetime
+from io import BytesIO
+from pydantic import BaseModel
 from typing import Optional, Literal
 import bcrypt
-from fastapi.responses import FileResponse
 import unicodedata
-from fastapi.responses import FileResponse
-from fastapi import Response
 import urllib.parse
 from fastapi.responses import StreamingResponse
-import urllib.parse
-from routers import director, docente
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
 # Agregar el directorio padre al path para poder importar auth
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from auth.auth import router as auth_router
+from routers.docente import router as docente_router
 from baseDatos.database import get_database_connection
 
 load_dotenv()
@@ -35,7 +32,7 @@ UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 
 #Llamado de rutas para las consultas de los otros dos roles
 #app.include_router(director.router)
-#app.include_router(docente.router)
+app.include_router(docente_router)
 
 class CreateUserRequest(BaseModel):
     name: str
@@ -664,7 +661,6 @@ def get_user(user_id: int):
                 "status": "error",
                 "message": "Usuario no encontrado"
             }
-        
         # Convertir unit_ids de string a lista
         if usuario['unit_ids']:
             usuario['unit_ids'] = [int(uid) for uid in usuario['unit_ids'].split(',')]
@@ -1159,6 +1155,51 @@ def delete_code(code_id: int):
         print(f"❌ Error eliminando codigo: {e}")
         import traceback
         traceback.print_exc()
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.get("/admin/types")
+def get_all_types():
+    """Obtiene todos los tipos de actividades"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        
+        cursor.execute("""
+            SELECT 
+                t.id, 
+                t.name, 
+                t.code_id,
+                c.code,
+                c.name as code_name,
+                t.created_at, 
+                t.updated_at
+            FROM types t
+            LEFT JOIN codes c ON c.id = t.code_id
+            ORDER BY t.name ASC
+        """)
+        tipos = cursor.fetchall()
+
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "data": tipos
+        }
+
+    except Exception as e:
+        print(f"❌ Error obteniendo tipos: {e}")
         return {
             "status": "error",
             "message": str(e)
@@ -1692,6 +1733,7 @@ def get_admin_activities(
             a.evidence_file,
             u.name AS user_name,
             d.name AS department,
+            GROUP_CONCAT(DISTINCT un.name ORDER BY un.name SEPARATOR ', ') AS unit,
             CONCAT(c.code, ' - ', c.name) AS code,
             a.state,
             a.description,
@@ -1719,7 +1761,20 @@ def get_admin_activities(
         if unidad:
             query += f" AND un.name = '{unidad}'"
         
-        query += " ORDER BY a.created_at DESC"
+        query += """
+        GROUP BY
+            a.id,
+            a.evidence_file,
+            u.name,
+            d.name,
+            c.code,
+            c.name,
+            a.state,
+            a.description,
+            a.created_at,
+            a.updated_at
+        ORDER BY a.created_at DESC
+        """
         
         cursor.execute(query)
         actividades = cursor.fetchall()
@@ -1734,10 +1789,6 @@ def get_admin_activities(
 
     except Exception as e:
         print(f"Error obteniendo actividades: {e}")
-        return {
-            "status": "error",
-            "message": str(e)
-        }
         return {
             "status": "error",
             "message": str(e)
@@ -2117,6 +2168,163 @@ def get_activity_states():
     
     except Exception as e:
         print(f"❌ Error obteniendo estados: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.get("/admin/reports/excel")
+def download_reports_excel(
+    fecha_inicio: str = None,
+    fecha_final: str = None,
+    estado: str = None,
+    departamento: str = None,
+    unidad: str = None
+):
+    """Descarga un Excel de actividades aplicando los filtros seleccionados"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+
+        query = """
+        SELECT
+            u.name AS user_name,
+            d.name AS department,
+            GROUP_CONCAT(DISTINCT un.name ORDER BY un.name SEPARATOR ', ') AS unit,
+            CONCAT(c.code, ' - ', c.name) AS code,
+            a.description,
+            a.created_at,
+            a.state
+        FROM activities a
+        LEFT JOIN users u ON u.id = a.user_id
+        LEFT JOIN departments d ON d.id = u.department_id
+        LEFT JOIN types t ON t.id = a.type_id
+        LEFT JOIN codes c ON c.id = t.code_id
+        LEFT JOIN unit_user uu ON uu.user_id = u.id
+        LEFT JOIN units un ON un.id = uu.unit_id
+        WHERE 1=1
+        """
+
+        params = []
+
+        if fecha_inicio:
+            query += " AND DATE(a.created_at) >= %s"
+            params.append(fecha_inicio)
+        if fecha_final:
+            query += " AND DATE(a.created_at) <= %s"
+            params.append(fecha_final)
+        if estado:
+            query += " AND a.state = %s"
+            params.append(estado)
+        if departamento:
+            query += " AND d.name = %s"
+            params.append(departamento)
+        if unidad:
+            query += " AND un.name = %s"
+            params.append(unidad)
+
+        query += """
+        GROUP BY
+            a.id,
+            u.name,
+            d.name,
+            c.code,
+            c.name,
+            a.description,
+            a.created_at,
+            a.state
+        ORDER BY a.created_at DESC
+        """
+
+        cursor.execute(query, params)
+        actividades = cursor.fetchall()
+
+        cursor.close()
+        conexion.close()
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Reporte"
+
+        headers = [
+            "Usuario",
+            "Departamento",
+            "Unidad",
+            "Actividad",
+            "Descripción",
+            "Fecha envío",
+            "Mes",
+            "Estado"
+        ]
+
+        ws.append(headers)
+
+        header_fill = PatternFill(fill_type="solid", fgColor="1F6FEB")
+        header_font = Font(color="FFFFFF", bold=True)
+        thin = Side(style="thin", color="D0D7DE")
+        cell_border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+        for cell in ws[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            cell.border = cell_border
+
+        month_names = {
+            1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril", 5: "Mayo", 6: "Junio",
+            7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
+        }
+
+        for item in actividades:
+            created_at = item.get("created_at")
+            fecha_envio = created_at.strftime("%d-%m-%Y") if created_at else "-"
+            mes = month_names.get(created_at.month, "-") if created_at else "-"
+
+            ws.append([
+                item.get("user_name") or "-",
+                item.get("department") or "-",
+                item.get("unit") or "-",
+                item.get("code") or "-",
+                item.get("description") or "-",
+                fecha_envio,
+                mes,
+                item.get("state") or "-"
+            ])
+
+        for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=1, max_col=8):
+            for cell in row:
+                cell.border = cell_border
+                cell.alignment = Alignment(vertical="top", wrap_text=True)
+
+        ws.freeze_panes = "A2"
+        ws.auto_filter.ref = None
+
+        column_widths = [24, 20, 28, 24, 44, 14, 14, 18]
+        for index, width in enumerate(column_widths, start=1):
+            ws.column_dimensions[chr(64 + index)].width = width
+
+        file_stream = BytesIO()
+        wb.save(file_stream)
+        file_stream.seek(0)
+
+        filename = f"reporte_actividades_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
+        return StreamingResponse(
+            file_stream,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+
+    except Exception as e:
+        print(f"❌ Error generando Excel de reportes: {e}")
         return {
             "status": "error",
             "message": str(e)

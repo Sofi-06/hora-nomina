@@ -1,0 +1,78 @@
+<app-nav-component></app-nav-component>
+<div class="create-activity-container">
+	<h2 class="title">
+		<i class="fas fa-edit"></i> Editar Actividad
+	</h2>
+
+	<div *ngIf="errorMessage" class="alert alert-error">
+		<i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+	</div>
+
+	<div *ngIf="successMessage" class="alert alert-success">
+		<i class="fas fa-check-circle"></i> {{ successMessage }}
+	</div>
+
+	<form class="form-card" enctype="multipart/form-data">
+		<div class="form-group">
+			<label for="unit">Unidad *</label>
+			<select id="unit" name="unit" [(ngModel)]="selectedUnit" [disabled]="isLoading" required>
+				<option [ngValue]="null" disabled>Seleccione la unidad a la que pertenece</option>
+				<option *ngFor="let unit of units" [ngValue]="unit.id">{{ unit.name }}</option>
+			</select>
+		</div>
+
+		<div class="form-group">
+			<label for="code">Código *</label>
+			<select id="code" name="code" [(ngModel)]="selectedCode" [disabled]="isLoading" required>
+				<option [ngValue]="null" disabled>Seleccione un código</option>
+				<option *ngFor="let code of codes" [ngValue]="code.id">{{ code.code }} - {{ code.name }}</option>
+			</select>
+		</div>
+
+		<div class="form-group">
+			<label for="activityType">Tipo de actividad *</label>
+			<select id="activityType" name="activityType" [(ngModel)]="selectedActivityType" [disabled]="isLoading" required>
+				<option [ngValue]="null" disabled>{{ activityTypes.length === 0 ? 'No existen registros' : 'Seleccione un tipo de actividad' }}</option>
+				<option *ngFor="let type of activityTypes" [ngValue]="type.id">{{ type.name }}</option>
+			</select>
+		</div>
+
+		<div class="form-group">
+			<label for="month">Mes *</label>
+			<input id="month" name="month" type="text" [ngModel]="currentMonth" [disabled]="true" placeholder="Mes actual" />
+		</div>
+
+		<div class="form-group">
+			<label for="hours">Horas dedicadas *</label>
+			<input id="hours" name="hours" type="number" [(ngModel)]="dedicatedHours" [disabled]="isLoading" min="0" max="40" placeholder="Digite la cantidad de horas dedicadas" required />
+		</div>
+
+		<div class="form-group">
+			<label for="description">Descripción *</label>
+			<textarea id="description" name="description" [(ngModel)]="description" [disabled]="isLoading" maxlength="1000" rows="4" placeholder="Digite una descripción de la actividad realizada" required></textarea>
+		</div>
+
+		<div class="form-group">
+			<label for="evidence">Evidencia *</label>
+			<div class="file-upload">
+				<input #fileInput id="evidence" name="evidence" type="file" (change)="onFileSelected($event)" [disabled]="isLoading" accept=".doc,.docx,.xml,.pdf,.xlsx,.zip,.rar" style="display: none" />
+				<button type="button" class="btn-upload" (click)="fileInput.click()" [disabled]="isLoading">
+					<i class="fas fa-lock"></i> Selecciona la evidencia
+				</button>
+				<p class="file-info" *ngIf="selectedFile">
+					<i class="fas fa-file"></i> {{ selectedFile.name }}
+				</p>
+			</div>
+			<p class="file-formats">Formatos aceptados: .doc .docx .xml .pdf .xlsx .zip .rar</p>
+		</div>
+
+		<div class="actions">
+			<button type="button" class="btn-cancel" (click)="cancelar()" [disabled]="isLoading">Cancelar</button>
+			<button type="submit" class="btn-save" [disabled]="isLoading || !isFormValid()">
+				<i *ngIf="isLoading" class="fas fa-spinner fa-spin"></i>
+				{{ isLoading ? 'Guardando...' : 'Guardar' }}
+			</button>
+		</div>
+	</form>
+</div>
+<app-footer></app-footer>

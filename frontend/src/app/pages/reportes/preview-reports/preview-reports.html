@@ -4,7 +4,7 @@
   <div class="header">
     <h1>Reportes</h1>
     <button class="btn-download" (click)="descargarExcel()">
-      <i class="fas fa-download"></i> Descargar Excel Temporal
+      <i class="fas fa-download"></i> Descargar Excel
     </button>
   </div>
 
@@ -24,6 +24,7 @@
         <tr>
           <th>Usuario</th>
           <th>Departamento</th>
+          <th>Unidad</th>
           <th>Actividad</th>
           <th>Descripción</th>
           <th>Fecha envío</th>
@@ -35,6 +36,7 @@
         <tr *ngFor="let activity of activities" class="activity-row">
           <td>{{ activity.user_name }}</td>
           <td>{{ activity.department }}</td>
+          <td>{{ activity.unit || '-' }}</td>
           <td>{{ activity.code }}</td>
           <td>{{ activity.description }}</td>
           <td>{{ formatDate(activity.created_at) }}</td>

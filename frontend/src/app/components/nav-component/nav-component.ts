@@ -14,16 +14,45 @@ export class NavComponent implements OnInit {
   activeLink = 0;
   dropdownOpen = false;
   usuario: Usuario | null = null;
+  inicioRoute = '/home';
+  role = '';
 
   constructor(
-    private auth: Auth,
-    private router: Router,
+    private readonly auth: Auth,
+    private readonly router: Router,
   ) {}
 
   ngOnInit() {
     this.auth.usuario$.subscribe((usuario) => {
       this.usuario = usuario;
+      this.role = (usuario?.role || '').toLowerCase();
+      this.inicioRoute = this.getInicioRoute(usuario?.role);
     });
+
+    const usuarioActual = this.auth.getUsuarioActual();
+    this.role = (usuarioActual?.role || '').toLowerCase();
+    this.inicioRoute = this.getInicioRoute(usuarioActual?.role);
+  }
+
+  isDocente(): boolean {
+    return this.role === 'docente';
+  }
+
+  isAdmin(): boolean {
+    return this.role === 'admin';
+  }
+
+  private getInicioRoute(role?: string): string {
+    switch ((role || '').toLowerCase()) {
+      case 'admin':
+        return '/admin';
+      case 'docente':
+        return '/docente';
+      case 'director':
+        return '/director';
+      default:
+        return '/home';
+    }
   }
 
   isUsersActive(): boolean {
@@ -37,6 +66,18 @@ export class NavComponent implements OnInit {
   isActivitiesActive(): boolean {
   return this.router.url.startsWith('/actividades') || this.router.url.startsWith('/estadoActividades') || this.router.url.startsWith('/reportes') || this.router.url.startsWith('/verReportes');
 }
+
+  isDocenteActive(): boolean {
+    return this.router.url.startsWith('/docente') || this.router.url.startsWith('/crearActividad') || this.router.url.startsWith('/editarActividad');
+  }
+
+  isInicioActive(): boolean {
+    if (this.role === 'docente') {
+      return this.isDocenteActive();
+    }
+    return this.router.url === this.inicioRoute;
+  }
+
   toggleDropdown(): void {
     this.dropdownOpen = !this.dropdownOpen;
   }
@@ -48,5 +89,4 @@ export class NavComponent implements OnInit {
   logout(): void {
     this.auth.logout();
   }
-  cambioUser() {}
 }

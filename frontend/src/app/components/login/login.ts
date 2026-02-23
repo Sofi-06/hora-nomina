@@ -1,9 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { Auth } from '../../services/auth';
-import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-login',
@@ -11,7 +9,7 @@ import { ChangeDetectorRef } from '@angular/core';
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
-export class Login {
+export class Login implements OnInit {
   email: string = '';
   password: string = '';
   errorMessage: string = '';
@@ -19,9 +17,14 @@ export class Login {
 
   constructor(
     private auth: Auth,
-    private router: Router,
     private cd: ChangeDetectorRef,
   ) {}
+
+  ngOnInit(): void {
+    if (this.auth.isAuthenticated()) {
+      this.auth.redirigirUsuarioActual();
+    }
+  }
 
   onSubmit(): void {
     this.errorMessage = '';
@@ -39,13 +42,12 @@ export class Login {
 
         if (response.status === 'success' && response.usuario) {
           
-          if (typeof window !== 'undefined') {
+          if (globalThis.window !== undefined) {
             localStorage.setItem('usuario', JSON.stringify(response.usuario));
           }
 
           this.auth.actualizarUsuario(response.usuario);
-
-          this.redirectByRole(response.usuario.role);
+          this.auth.redirigirPorRol(response.usuario.role);
         } else {
           this.errorMessage = response.mensaje || 'Credenciales inválidas';
           this.password = '';
@@ -81,19 +83,4 @@ export class Login {
     });
   }
 
-  private redirectByRole(role: string): void {
-    switch (role.toLowerCase()) {
-      case 'admin':
-        this.router.navigate(['/admin']);
-        break;
-      case 'docente':
-        this.router.navigate(['/docente']);
-        break;
-      case 'director':
-        this.router.navigate(['/director']);
-        break;
-      default:
-        this.router.navigate(['/home']);
-    }
-  }
 }

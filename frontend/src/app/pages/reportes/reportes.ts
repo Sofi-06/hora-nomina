@@ -101,6 +101,11 @@ export class Reportes implements OnInit {
     this.selectedUnit = '';
   }
 
+  cancelar(): void {
+    this.clearFilters();
+    this.router.navigate(['/actividades']);
+  }
+
   previsualizarReporte(): void {
     const filters = this.getSelectedFilters();
     this.router.navigate(['/verReportes'], { queryParams: filters });

@@ -45,7 +45,7 @@
 					<span>Estado</span>
 				</label>
 				<select class="field-input" [(ngModel)]="selectedState" [disabled]="!useState">
-					<option value="" disabled>Seleccione el estado</option>
+					<option value="">Seleccione el estado</option>
 					<option *ngFor="let state of stateOptions" [value]="state.name">{{ state.name }}</option>
 				</select>
 			</section>
@@ -59,7 +59,7 @@
 					<span>Departamento</span>
 				</label>
 				<select class="field-input" [(ngModel)]="selectedDepartment" [disabled]="!useDepartment">
-					<option value="" disabled>Seleccione el departamento</option>
+					<option value="">Seleccione el departamento</option>
 					<option *ngFor="let dept of departmentOptions" [value]="dept.name">{{ dept.name }}</option>
 				</select>
 			</section>
@@ -73,23 +73,19 @@
 					<span>Unidad</span>
 				</label>
 				<select class="field-input" [(ngModel)]="selectedUnit" [disabled]="!useUnit">
-					<option value="" disabled>Seleccione la unidad</option>
+					<option value="">Seleccione la unidad</option>
 					<option *ngFor="let unit of unitOptions" [value]="unit.name">{{ unit.name }}</option>
 				</select>
 			</section>
 		</div>
 
 		<div *ngIf="!loading" class="actions-row">
-			<button type="button" class="btn-cancel" (click)="clearFilters()">
+			<button type="button" class="btn-cancel" (click)="cancelar()">
 				<i class="fas fa-times"></i> Cancelar
 			</button>
 			<button type="button" class="btn-preview" (click)="previsualizarReporte()"
 				[disabled]="!hasAnyFilterEnabled()" [routerLink]="['/verReportes']">
 				<i class="fas fa-eye"></i> Previsualizar
-			</button>
-			<button type="button" class="btn-generate" (click)="generarReporte()"
-				[disabled]="!hasAnyFilterEnabled()">
-				<i class="fas fa-download"></i> Generar
 			</button>
 		</div>
 	</div>

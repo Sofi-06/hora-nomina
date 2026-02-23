@@ -18,6 +18,8 @@ import { StateActivities } from './pages/admin/actividades/state-activities/stat
 import { ViewTypes } from './pages/admin/tipos/view-types/view-types';
 import { Reportes } from './pages/reportes/reportes';
 import { PreviewReports } from './pages/reportes/preview-reports/preview-reports';
+import { CreateActivities } from './pages/docente/create-activities/create-activities';
+import { EditActivities } from './pages/docente/edit-activities/edit-activities';
 
 export const routes: Routes = [
   {
@@ -114,6 +116,16 @@ export const routes: Routes = [
     component: PreviewReports,
     canActivate: [AuthGuard]
   },
+      {
+    path: 'crearActividad',
+    component: CreateActivities,
+    canActivate: [AuthGuard]
+  }, 
+    {
+    path: 'editarActividad',
+    component: EditActivities,
+    canActivate: [AuthGuard]
+  }, 
     {
     path: 'director',
     component: Director,

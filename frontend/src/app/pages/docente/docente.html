@@ -1,0 +1,122 @@
+<app-nav-component></app-nav-component>
+
+<div class="docente-container">
+  <!-- Header -->
+  <header class="docente-header">
+    <div class="header-content">
+      <div class="header-text">
+        <h1 class="main-title">PANEL DE CONTROL DOCENTE</h1>
+        <h2 class="welcome-title">Bienvenido(a), <span class="docente-name">{{ nombreUsuario }}</span></h2>
+      </div>
+      <div class="date-display">
+        <i class="fas fa-calendar-alt calendar-icon"></i>
+        <span class="date-text">{{ currentDate }}</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenido principal -->
+  <main class="docente-content">
+    
+    <!-- Sección de Actividades -->
+    <div class="actividades-section">
+      <div class="users-header">
+        <div class="title-row">
+          <h2 class="users-title">
+            <i class="fas fa-chart-bar"></i> Mis Actividades Subidas
+          </h2>
+
+          <div class="header-actions">
+            <button type="button" class="btn-create" routerLink="/crearActividad">
+              <i class="fas fa-plus"></i> Crear Actividad
+            </button>
+          </div>
+        </div>
+
+        <div class="filters-row">
+          <div class="search-field">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" placeholder="Buscar actividad" [(ngModel)]="searchTerm" (input)="applyFilters()" class="search-input" />
+          </div>
+
+          <div class="date-field">
+            <input type="date" [(ngModel)]="dateFilter" (change)="applyFilters()" class="date-input" />
+          </div>
+
+          <button type="button" class="btn-create btn-clear btn-date-clear" (click)="dateFilter=''; searchTerm=''; applyFilters()">
+            <i class="fas fa-eraser"></i> Limpiar
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="error" class="error-message">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+      </div>
+
+      <div *ngIf="loading" class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i> Cargando actividades...
+      </div>
+
+      <div *ngIf="!loading && filtered.length === 0" class="no-data">
+        <i class="fas fa-inbox"></i>
+        <p>No hay actividades para mostrar</p>
+      </div>
+
+      <div *ngIf="!loading && filtered.length > 0" class="table-wrapper">
+        <table class="activities-table">
+          <thead>
+            <tr>
+              <th>Departamento</th>
+              <th>Unidad</th>
+              <th>Código</th>
+              <th>Estado</th>
+              <th>Mes</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of pagedActivities" class="activity-row">
+              <td class="cell-department">{{ a.department || '-' }}</td>
+              <td class="cell-unit">{{ a.unit || '-' }}</td>
+              <td class="cell-code">{{ a.code || '-' }}</td>
+              <td class="cell-state">
+                <span [ngClass]="getStateClass(a.state)">{{ a.state || '-' }}</span>
+              </td>
+              <td class="cell-date">{{ formatMonthYear(a.created_at) }}</td>
+              <td class="cell-actions">
+                <button class="btn-download" type="button" title="Descargar" (click)="descargar(a.id, a.evidence_file)">
+                  <i class="fas fa-download"></i>
+                </button>
+                <button class="btn-edit btn-activity" type="button" title="Editar" routerLink="/editarActividad">
+                  <i class="fas fa-pencil-alt"></i>
+                </button>
+                <button class="btn-delete btn-activity" type="button" title="Eliminar" (click)="eliminar(a.id)">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="!loading && filtered.length > 0" class="pagination-footer">
+        <p>
+          Mostrando <strong>{{ pageStart }}</strong>-<strong>{{ pageEnd }}</strong>
+          de <strong>{{ filtered.length }}</strong> actividades
+        </p>
+        <div class="pagination">
+          <button type="button" class="pagination-btn" [disabled]="currentPage === 1" (click)="prevPage()">
+            Anterior
+          </button>
+          <span class="pagination-info">Página {{ currentPage }} de {{ totalPages }}</span>
+          <button type="button" class="pagination-btn" [disabled]="currentPage === totalPages" (click)="nextPage()">
+            Siguiente
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<app-footer></app-footer>
