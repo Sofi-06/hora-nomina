@@ -1,3 +1,49 @@
+/* Estado de actividad colores elegantes y sutiles */
+.state-green {
+  background: #eaf7ea;
+  color: #222;
+  border-radius: 6px;
+  padding: 2px 12px;
+  font-size: 13px;
+  font-weight: 400;
+  border: 1px solid #c8e6c9;
+}
+.state-yellow {
+  background: #fffbe6;
+  color: #222;
+  border-radius: 6px;
+  padding: 2px 12px;
+  font-size: 13px;
+  font-weight: 400;
+  border: 1px solid #ffe082;
+}
+.state-red {
+  background: #fbeaea;
+  color: #222;
+  border-radius: 6px;
+  padding: 2px 12px;
+  font-size: 13px;
+  font-weight: 400;
+  border: 1px solid #ffcdd2;
+}
+.state-orange {
+  background: #fff4e6;
+  color: #222;
+  border-radius: 6px;
+  padding: 2px 12px;
+  font-size: 13px;
+  font-weight: 400;
+  border: 1px solid #ffcc80;
+}
+.state-default {
+  background: #f4f4f4;
+  color: #222;
+  border-radius: 6px;
+  padding: 2px 12px;
+  font-size: 13px;
+  font-weight: 400;
+  border: 1px solid #e0e0e0;
+}
 .list-users-container {
   padding: 30px;
   background-color: #f8f9fa;

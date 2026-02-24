@@ -14,6 +14,7 @@ interface ActivityItem {
   unit: string;
   code: string;
   state: string;
+  month: string;
   created_at: string;
   updated_at: string;
   evidence_file: string;
@@ -105,6 +106,7 @@ export class Docente implements OnInit {
               unit: item?.unit ?? '',
               code: item?.code ?? '',
               state: item?.state ?? '',
+              month: item?.month ? item.month : '-',
               created_at: item?.created_at ?? '',
               updated_at: item?.updated_at ?? '',
               evidence_file: item?.evidence_file ?? item?.document_name ?? item?.document_url ?? ''
@@ -171,8 +173,18 @@ export class Docente implements OnInit {
   formatMonthYear(date: string): string {
     if (!date) return '-';
     const d = new Date(date);
-    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long' };
-    return d.toLocaleDateString('es-ES', options);
+    // Restar un mes
+    let prevMonth = d.getMonth() - 1;
+    let year = d.getFullYear();
+    if (prevMonth < 0) {
+      prevMonth = 11;
+      year = year - 1;
+    }
+    const monthNames = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    return monthNames[prevMonth] + ' ' + year;
   }
 
   formatRelativeUpdate(date: string): string {
@@ -195,10 +207,15 @@ export class Docente implements OnInit {
 
   getStateClass(state: string): string {
     const stateMap: { [key: string]: string } = {
-      'Pendiente': 'state-pending',
-      'Aprobada': 'state-approved',
-      'Rechazada': 'state-rejected',
-      'En revisión': 'state-review'
+      'Aprobado': 'state-green',
+      'Reenviado': 'state-yellow',
+      'Con observaciones': 'state-yellow',
+      'Desaprobado': 'state-red',
+      'Revisión': 'state-orange',
+      'Pendiente': 'state-default',
+      'Aprobada': 'state-green',
+      'Rechazada': 'state-red',
+      'En revisión': 'state-orange'
     };
     return stateMap[state] || 'state-default';
   }
@@ -220,8 +237,6 @@ export class Docente implements OnInit {
   }
 
   editar(id: number): void {
-    // Lógica para editar actividad
-    // Por ejemplo, navegar a la página de edición
     this.router.navigate([`/editarActividad/${id}`]);
   }
 

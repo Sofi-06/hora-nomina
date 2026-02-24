@@ -72,7 +72,13 @@ export class CreateActivities implements OnInit {
       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
     ];
     const now = new Date();
-    this.currentMonth = monthNames[now.getMonth()] + ' ' + now.getFullYear();
+    let prevMonth = now.getMonth() - 1;
+    let year = now.getFullYear();
+    if (prevMonth < 0) {
+      prevMonth = 11;
+      year = year - 1;
+    }
+    this.currentMonth = monthNames[prevMonth] + ' ' + year;
   }
 
   private loadInitialData(): void {

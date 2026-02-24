@@ -37,7 +37,7 @@
       <hr class="full-row">
 
       <label>Mes</label>
-      <input type="text" [value]="activity.month" readonly>
+      <input type="text" [value]="getMonthName(activity.month)" readonly>
 
       <label>Fecha</label>
       <input type="text" [value]="formatDateTime(activity.created_at)" readonly>

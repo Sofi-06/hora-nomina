@@ -15,6 +15,11 @@ import { Archivo } from '../../../../archivo';
   styleUrls: ['./state-activities.css'],
 })
 export class StateActivities implements OnInit {
+    getMonthName(monthText: string): string {
+      if (!monthText) return '-';
+      // Si el mes viene como 'Enero 2026', solo devolver 'Enero'
+      return monthText.split(' ')[0];
+    }
   private apiUrl = 'http://localhost:8000';
 
   activityId!: number;

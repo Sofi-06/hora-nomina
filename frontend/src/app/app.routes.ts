@@ -122,7 +122,7 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   }, 
     {
-    path: 'editarActividad',
+    path: 'editarActividad/:id',
     component: EditActivities,
     canActivate: [AuthGuard]
   }, 

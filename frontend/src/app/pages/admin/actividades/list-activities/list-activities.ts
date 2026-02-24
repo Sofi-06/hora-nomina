@@ -250,12 +250,19 @@ export class ListActivities implements OnInit {
     }
   }
 
-  getStateClass(state?: string | null): string {
-    const s = (state ?? '').toLowerCase();
-    if (['activo', 'active', 'aprobado', 'enabled'].includes(s)) return 'state-active';
-    if (['inactivo', 'inactive', 'rechazado', 'disabled'].includes(s)) return 'state-inactive';
-    if (['pendiente', 'pending'].includes(s)) return 'state-pending';
-    return 'state-default';
+  getStateClass(state: string): string {
+    const stateMap: { [key: string]: string } = {
+      'Aprobado': 'state-green',
+      'Reenviado': 'state-yellow',
+      'Con observaciones': 'state-yellow',
+      'Desaprobado': 'state-red',
+      'Revisión': 'state-orange',
+      'Pendiente': 'state-default',
+      'Aprobada': 'state-green',
+      'Rechazada': 'state-red',
+      'En revisión': 'state-orange'
+    };
+    return stateMap[state] || 'state-default';
   }
 
   formatMonthYear(value?: string | Date | null): string {

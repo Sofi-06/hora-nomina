@@ -87,7 +87,7 @@
                 <button class="btn-download" type="button" title="Descargar" (click)="descargar(a.id, a.evidence_file)">
                   <i class="fas fa-download"></i>
                 </button>
-                <button class="btn-edit btn-activity" type="button" title="Editar" routerLink="/editarActividad">
+                <button class="btn-edit btn-activity" type="button" title="Editar" [routerLink]="['/editarActividad', a.id]">
                   <i class="fas fa-pencil-alt"></i>
                 </button>
                 <button class="btn-delete btn-activity" type="button" title="Eliminar" (click)="eliminar(a.id)">
