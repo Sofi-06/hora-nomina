@@ -8,7 +8,7 @@
             </h2>
 
             <div class="header-actions">
-                <button type="button" class="btn-create btn-extend" (click)="openExtendModal()">
+                <button *ngIf="role === 'admin'" type="button" class="btn-create btn-extend" (click)="openExtendModal()">
                     <i class="fas fa-expand-arrows-alt"></i> Ampliar plazo
                 </button>
                 <button type="button" class="btn-create btn-report-icon" [routerLink]="['/reportes']" title="Reportes"
@@ -78,17 +78,23 @@
                     <td class="cell-date">{{ formatMonthYear(a.created_at) }}</td>
                     <td class="cell-date">{{ formatRelativeUpdate(a.updated_at) }}</td>
                     <td class="cell-actions">
-                        <button class="btn-edit" type="button" [routerLink]="['/estadoActividades', a.id]"
-                            title="Revisar actividad">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button
-                          class="btn-download"
-                          type="button"
-                          title="Descargar"
-                          (click)="descargar(a.id, a.evidence_file)">
-                          <i class="fas fa-download"></i>
-                        </button>
+                                                <button class="btn-edit" type="button" [routerLink]="['/estadoActividades', a.id]"
+                                                        title="Revisar actividad">
+                                                        <i class="fas fa-clipboard-list"></i>
+                                                </button>
+                                                <button
+                                                    class="btn-download"
+                                                    type="button"
+                                                    title="Descargar"
+                                                    (click)="descargar(a.id, a.evidence_file)"
+                                                    [disabled]="descargandoId === a.id">
+                                                    <ng-container *ngIf="descargandoId === a.id; else iconDownload">
+                                                        <span class="descargando-icon">Descargando...</span>
+                                                    </ng-container>
+                                                    <ng-template #iconDownload>
+                                                        <i class="fas fa-download"></i>
+                                                    </ng-template>
+                                                </button>
                     </td>
                 </tr>
             </tbody>

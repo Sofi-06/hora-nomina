@@ -3,9 +3,12 @@
 <main class="preview-reports-container">
   <div class="header">
     <h1>Reportes</h1>
-    <button class="btn-download" (click)="descargarExcel()">
+    <button class="btn-download" (click)="descargarExcel()" [disabled]="descargando">
       <i class="fas fa-download"></i> Descargar Excel
     </button>
+  </div>
+  <div *ngIf="descargando" class="descargando">
+    <p>Descargando Excel...</p>
   </div>
 
   <p class="subtitle">Previsualización de los filtros seleccionados</p>

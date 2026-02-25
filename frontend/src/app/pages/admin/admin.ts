@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { NavComponent } from '../../components/nav-component/nav-component';
 import { Footer } from '../../components/footer/footer';
 import { Auth } from '../../services/auth';
-import { Subscription } from 'rxjs';
-import { ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectorRef } from '@angular/core';import { Subscription } from 'rxjs';
+
 
 @Component({
   selector: 'app-admin',

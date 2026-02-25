@@ -7,6 +7,7 @@ import { Footer } from '../../../../components/footer/footer';
 import { RouterLink } from '@angular/router';
 import { Archivo } from '../../../../archivo';
 import { ExtendDate } from '../extend-date/extend-date';
+import { Auth, Usuario } from '../../../../services/auth';
 
 interface ActivityItem {
   id: number;
@@ -43,85 +44,70 @@ export class ListActivities implements OnInit {
 
   showExtendModal = false;
 
+  usuario: Usuario | null = null;
+  role: string = '';
+  descargandoId: number | null = null;
+
   private readonly apiUrl = 'http://localhost:8000';
 
   constructor(
-    private http: HttpClient,
-    private cdr: ChangeDetectorRef,
-    private archivo: Archivo
-  ) {}
+    private readonly http: HttpClient,
+    private readonly cdr: ChangeDetectorRef,
+    private readonly archivo: Archivo,
+    private readonly auth: Auth
+  ) {
+    this.usuario = this.auth.getUsuarioActual();
+    this.role = this.usuario?.role?.toLowerCase() ?? '';
+  }
 
   ngOnInit(): void {
     this.loadActivities();
   }
 
   // ✅ CORREGIDO
-  loadActivities(): void {
+ loadActivities(): void {
+  this.loading = true;
+  this.error = '';
 
-    this.loading = true;
-    this.error = '';
 
-    this.http.get<any>(`${this.apiUrl}/admin/activities`)
-    .subscribe({
+  const user_id = this.usuario?.id;
+  const role = this.usuario?.role?.toLowerCase();
 
-      next: (response) => {
-
-        if (response.status === 'success' && response.data) {
-
-          this.activities = response.data.map((item: any): ActivityItem => ({
-
-            id: item?.id ?? 0,
-
-            user_name: item?.user_name ?? '',
-
-            department: item?.department ?? '',
-
-            code: item?.code ?? '',
-
-            state: item?.state ?? '',
-
-            created_at: item?.created_at ?? '',
-
-            updated_at: item?.updated_at ?? '',
-
-            evidence_file:
-              item?.evidence_file ??
-              item?.document_name ??
-              item?.document_url ??
-              ''
-
-          }));
-
-          console.log('Activities cargadas:', this.activities);
-
-          this.applyFilters();
-
-        } else {
-
-          this.error = response.message || 'No se pudieron cargar actividades';
-
-        }
-
-        this.loading = false;
-        this.cdr.detectChanges();
-
-      },
-
-      error: (err) => {
-
-        console.error(err);
-
-        this.error = 'Error de conexión al servidor';
-
-        this.loading = false;
-
-        this.cdr.detectChanges();
-
-      }
-
-    });
-
+  if (!user_id || !role) {
+    this.error = 'No hay usuario autenticado';
+    this.loading = false;
+    return;
   }
+
+  this.http.get<any>(`http://localhost:8000/director/activities?user_id=${user_id}&role=${role}`)
+    .subscribe({
+      next: (response) => {
+        if (response.status === 'success' && response.data) {
+          this.activities = response.data.map((item: any): ActivityItem => ({
+            id: item?.id ?? 0,
+            user_name: item?.user_name ?? '',
+            department: item?.department ?? '',
+            code: item?.code ?? '',
+            state: item?.state ?? '',
+            created_at: item?.created_at ?? '',
+            updated_at: item?.updated_at ?? '',
+            evidence_file: item?.evidence_file ?? item?.document_name ?? item?.document_url ?? ''
+          }));
+          this.applyFilters();
+        } else {
+          this.error = response.message || 'No se pudieron cargar actividades';
+        }
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error(err);
+        this.error = 'Error de conexión al servidor';
+        this.loading = false;
+        this.cdr.detectChanges();
+      }
+    });
+}
 
 
   applyFilters(): void {
@@ -181,39 +167,26 @@ export class ListActivities implements OnInit {
 
 
   descargar(id: number, nombre: string): void {
-
     if (!nombre) nombre = 'archivo';
-
-    console.log('Descargando:', id, nombre);
-
+    this.descargandoId = id;
     this.archivo.descargarArchivo(id)
-
-    .subscribe({
-
-      next: (blob: Blob) => {
-
-        const url = window.URL.createObjectURL(blob);
-
-        const a = document.createElement('a');
-
-        a.href = url;
-
-        a.download = nombre;
-
-        a.click();
-
-        window.URL.revokeObjectURL(url);
-
-      },
-
-      error: () => {
-
-        alert('Error al descargar archivo');
-
-      }
-
-    });
-
+      .subscribe({
+        next: (blob: Blob) => {
+          const url = globalThis.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = nombre;
+          a.click();
+          globalThis.URL.revokeObjectURL(url);
+          this.descargandoId = null;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          alert('Error al descargar archivo');
+          this.descargandoId = null;
+          this.cdr.detectChanges();
+        }
+      });
   }
 
 

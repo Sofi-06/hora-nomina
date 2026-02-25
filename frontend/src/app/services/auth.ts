@@ -146,6 +146,18 @@ isAuthenticated(): boolean {
       }),
     );
   }
+
+  getDirectorDashboardMetrics(userId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/director/dashboard-metrics`, {
+      params: { user_id: userId },
+    }).pipe(
+      timeout(5000),
+      catchError((error: any) => {
+        console.error('Error obteniendo métricas director:', error);
+        return throwError(error);
+      }),
+    );
+  }
   actualizarUsuario(usuario: Usuario): void {
     this.usuarioActual.next(usuario);
   }

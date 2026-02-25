@@ -20,6 +20,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from auth.auth import router as auth_router
 from routers.docente import router as docente_router
+from routers.director import router as director_router
 from baseDatos.database import get_database_connection
 
 load_dotenv()
@@ -31,7 +32,7 @@ UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 
 
 #Llamado de rutas para las consultas de los otros dos roles
-#app.include_router(director.router)
+app.include_router(director_router)
 app.include_router(docente_router)
 
 class CreateUserRequest(BaseModel):
@@ -2300,21 +2301,31 @@ def download_reports_excel(
             7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
         }
 
+
+        import re
+        def limpiar_valor(valor):
+            if valor is None:
+                return "-"
+            # Solo permite caracteres imprimibles y comunes en español
+            return re.sub(r'[^\x20-\x7EáéíóúÁÉÍÓÚñÑüÜ ]', '', str(valor).replace('\n', ' ').replace('\r', ' '))[:1000]
+
         for item in actividades:
             created_at = item.get("created_at")
             fecha_envio = created_at.strftime("%d-%m-%Y") if created_at else "-"
             mes = month_names.get(created_at.month, "-") if created_at else "-"
 
-            ws.append([
-                item.get("user_name") or "-",
-                item.get("department") or "-",
-                item.get("unit") or "-",
-                item.get("code") or "-",
-                item.get("description") or "-",
+            fila = [
+                limpiar_valor(item.get("user_name")),
+                limpiar_valor(item.get("department")),
+                limpiar_valor(item.get("unit")),
+                limpiar_valor(item.get("code")),
+                limpiar_valor(item.get("description")),
                 fecha_envio,
                 mes,
-                item.get("state") or "-"
-            ])
+                limpiar_valor(item.get("state"))
+            ]
+            print(f"Fila a escribir: {fila}")
+            ws.append(fila)
 
         for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=1, max_col=8):
             for cell in row:

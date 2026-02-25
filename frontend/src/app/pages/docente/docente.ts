@@ -29,6 +29,7 @@ interface ActivityItem {
   styleUrl: './docente.css'
 })
 export class Docente implements OnInit {
+  creationBlocked = false;
   
   nombreUsuario: string = '';
   currentDate: string = '';
@@ -60,10 +61,24 @@ export class Docente implements OnInit {
   ) {}
 
   ngOnInit() {
+    // Bloqueo de creación después de los primeros 10 días de cada mes
+    this.creationBlocked = this.isCreationBlockedByDate();
+    setInterval(() => {
+      const blocked = this.isCreationBlockedByDate();
+      if (blocked !== this.creationBlocked) {
+        this.creationBlocked = blocked;
+        this.cd.detectChanges();
+      }
+    }, 60000); // Revisa cada minuto
     const usuario = this.auth.getUsuarioActual();
     this.nombreUsuario = usuario?.name || 'Docente';
     this.setCurrentDate();
     this.loadActivities();
+  }
+
+  isCreationBlockedByDate(): boolean {
+    const now = new Date();
+    return now.getDate() > 10;
   }
 
   private setCurrentDate(): void {
@@ -149,13 +164,20 @@ export class Docente implements OnInit {
 
   applyFilters(): void {
     this.filtered = this.activities.filter(activity => {
-      const matchesSearch = !this.searchTerm || 
-        activity.code.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        activity.user_name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        activity.state.toLowerCase().includes(this.searchTerm.toLowerCase());
+      const searchTerm = this.searchTerm ?? '';
+      const dateFilter = this.dateFilter ?? '';
+      const code = activity.code ?? '';
+      const user_name = activity.user_name ?? '';
+      const state = activity.state ?? '';
+      const created_at = activity.created_at ?? '';
 
-      const matchesDate = !this.dateFilter || 
-        activity.created_at.startsWith(this.dateFilter);
+      const matchesSearch = !searchTerm || 
+        code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        state.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesDate = !dateFilter || 
+        created_at.startsWith(dateFilter);
 
       return matchesSearch && matchesDate;
     });
