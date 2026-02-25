@@ -58,7 +58,7 @@
 
 .search-input {
   width: 100%;
-  padding: 12px 40px 12px 15px;
+  padding: 12px 15px 12px 45px;
   border: 2px solid #ddd;
   border-radius: 8px;
   font-size: 14px;
@@ -74,7 +74,7 @@
 
 .search-icon {
   position: absolute;
-  right: 15px;
+  left: 15px;
   top: 50%;
   transform: translateY(-50%);
   color: #999;
@@ -418,6 +418,17 @@
 .pagination-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+
+:host {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+app-footer {
+  margin-top: auto;
 }
 
 @keyframes slideIn {

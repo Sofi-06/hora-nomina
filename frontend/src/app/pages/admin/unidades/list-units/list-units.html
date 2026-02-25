@@ -1,0 +1,101 @@
+<app-nav-component></app-nav-component>
+<div class="list-units-container">
+  <!-- Header -->
+  <div class="units-header">
+    <h2 class="units-title">
+      <i class="fas fa-building"></i> Gestión de Unidades
+    </h2>
+    
+    <!-- Crear -->
+    <button type="button" class="btn-create" (click)="abrirCreateModal()">
+      <i class="fas fa-plus"></i> Nueva Unidad
+    </button>
+  </div>
+
+  <!-- Mensajes de error -->
+  <div *ngIf="error" class="error-message">
+    <i class="fas fa-exclamation-circle"></i> {{ error }}
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-spinner">
+    <i class="fas fa-spinner fa-spin"></i> Cargando unidades...
+  </div>
+
+  <!-- Sin datos -->
+  <div *ngIf="!loading && unidades.length === 0" class="no-data">
+    <i class="fas fa-inbox"></i>
+    <p>No hay unidades para mostrar</p>
+  </div>
+
+  <!-- Tabla de unidades -->
+  <div *ngIf="!loading && unidades.length > 0" class="table-wrapper">
+    <table class="units-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Códigos</th>
+          <th>Docentes</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let unidad of unidades" class="unit-row">
+          <td class="cell-id">{{ unidad.id }}</td>
+          <td class="cell-name">{{ unidad.name }}</td>
+          <td class="cell-codes">{{ unidad.total_codes }}</td>
+          <td class="cell-docentes">{{ unidad.total_docentes }}</td>
+          <td class="cell-actions">
+            <button
+              class="btn-edit"
+              (click)="editarUnidad(unidad.id)"
+              title="Editar unidad"
+            >
+              <i class="fas fa-edit"></i>
+            </button>
+            <button 
+              class="btn-delete" 
+              (click)="eliminarUnidad(unidad.id)"
+              title="Eliminar unidad"
+            >
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Create Unit -->
+<div *ngIf="showCreateModal" class="modal-overlay" (click)="closeCreateModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3><i class="fas fa-building"></i> Nueva Unidad</h3>
+      <button class="close-btn" (click)="closeCreateModal()" title="Cerrar">×</button>
+    </div>
+    <div class="modal-body">
+      <app-create-unit (close)="closeCreateModal()" (unitCreated)="onUnitCreated()"></app-create-unit>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Edit Unit -->
+<div *ngIf="showEditModal && selectedUnitId" class="modal-overlay" (click)="closeEditModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3><i class="fas fa-edit"></i> Editar Unidad</h3>
+      <button class="close-btn" (click)="closeEditModal()" title="Cerrar">×</button>
+    </div>
+    <div class="modal-body">
+      <app-edit-unit 
+        [unitId]="selectedUnitId"
+        (close)="closeEditModal()" 
+        (unitUpdated)="onUnitUpdated()">
+      </app-edit-unit>
+    </div>
+  </div>
+</div>
+
+<app-footer></app-footer>

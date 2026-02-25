@@ -1,0 +1,89 @@
+<app-nav-component></app-nav-component>
+
+<div class="list-departments-container">
+    <div class="departments-header">
+        <h2 class="departments-title">
+            <i class="fas fa-sitemap"></i> Departamentos
+        </h2>
+
+        <button type="button" class="btn-create" title="Crear nuevo departamento" (click)="abrirCreateModal()">
+  <i class="fas fa-plus"></i> Agregar departamento
+</button>
+
+        <div class="search-bar">
+            <input type="text" placeholder="Buscar departamento..." [(ngModel)]="searchTerm" (input)="buscar()"
+                class="search-input">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+    </div>
+
+    <div *ngIf="error" class="error-message">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
+
+    <div *ngIf="loading" class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i> Cargando departamentos...
+    </div>
+
+    <div *ngIf="!loading && departmentsFiltered.length === 0" class="no-data">
+        <i class="fas fa-inbox"></i>
+        <p>No hay departamentos para mostrar</p>
+    </div>
+
+    <div *ngIf="!loading && departmentsFiltered.length > 0" class="table-wrapper">
+        <table class="departments-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Docentes</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let dept of departmentsFiltered" class="dept-row">
+                    <td class="cell-id">{{ dept.id }}</td>
+                    <td class="cell-name">{{ dept.name }}</td>
+                    <td>{{ dept.total_docentes }}</td>
+                    <td class="cell-actions">
+                        <button class="btn-edit" type="button" title="Editar departamento" (click)="abrirEditModal(dept.id)">
+  <i class="fas fa-edit"></i>
+</button>
+                        <button class="btn-delete" type="button" (click)="eliminarDepartamento(dept.id)"
+                            title="Eliminar departamento">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Create -->
+<div *ngIf="showCreateModal" class="modal-overlay" (click)="closeCreateModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3><i class="fas fa-sitemap"></i> Nuevo Departamento</h3>
+      <button class="close-btn" (click)="closeCreateModal()" title="Cerrar">×</button>
+    </div>
+    <div class="modal-body">
+      <app-create-department (close)="closeCreateModal()" (departmentCreated)="onDepartmentCreated()"></app-create-department>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Edit -->
+<div *ngIf="showEditModal && selectedDepartmentId" class="modal-overlay" (click)="closeEditModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3><i class="fas fa-edit"></i> Editar Departamento</h3>
+      <button class="close-btn" (click)="closeEditModal()" title="Cerrar">×</button>
+    </div>
+    <div class="modal-body">
+      <app-edit-department [departmentId]="selectedDepartmentId" (close)="closeEditModal()" (departmentUpdated)="onDepartmentUpdated()"></app-edit-department>
+    </div>
+  </div>
+</div>
+
+<app-footer></app-footer>

@@ -1,0 +1,70 @@
+<app-nav-component></app-nav-component>
+
+<div class="list-codes-container">
+    <div class="codes-header">
+        <h2 class="codes-title">
+            <i class="fas fa-cogs"></i> Codigos
+        </h2>
+
+        <button type="button" class="btn-create" title="Crear nuevo codigo" routerLink="/crearCodigos">
+            <i class="fas fa-plus"></i> Agregar codigo
+        </button>
+
+        <div class="search-bar">
+            <input type="text" placeholder="Buscar codigo..." [(ngModel)]="searchTerm" (input)="buscar()"
+                class="search-input">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+    </div>
+
+    <div *ngIf="error" class="error-message">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
+
+    <div *ngIf="loading" class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i> Cargando codigos...
+    </div>
+
+    <div *ngIf="!loading && codesFiltered.length === 0" class="no-data">
+        <i class="fas fa-inbox"></i>
+        <p>No hay codigos para mostrar</p>
+    </div>
+
+    <div *ngIf="!loading && codesFiltered.length > 0" class="table-wrapper">
+        <table class="codes-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Codigo</th>
+                    <th>Nombre</th>
+                    <th>Unidad</th>
+                    <th>Actividades</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let codigo of codesFiltered" class="code-row">
+                    <td class="cell-id">{{ codigo.id }}</td>
+                    <td class="cell-code">{{ codigo.code }}</td>
+                    <td class="cell-name">{{ codigo.name }}</td>
+                    <td class="cell-unit">{{ codigo.unit || '-' }}</td>
+                    <td class="cell-activities">{{ codigo.types }}</td>
+                    <td class="cell-actions">
+                        <button class="btn-view" type="button" title="Ver actividades" routerLink="/verActividades/{{codigo.id}}">
+                            <i class="fas fa-list"></i>
+                        </button>
+                        <button class="btn-edit" type="button" title="Editar codigo" routerLink="/editarCodigos/{{codigo.id}}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-delete" type="button" (click)="eliminarCodigo(codigo.id)"
+                            title="Eliminar codigo">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<app-footer></app-footer>

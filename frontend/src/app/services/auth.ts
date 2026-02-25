@@ -30,6 +30,7 @@ export class Auth {
   private activeNavSection = new BehaviorSubject<number>(0);
   public activeNavSection$ = this.activeNavSection.asObservable();
 
+
   constructor(
     private http: HttpClient,
     private router: Router,
@@ -75,22 +76,8 @@ export class Auth {
     return this.usuarioActual.value;
   }
 
-  isAuthenticated(): boolean {
-    return this.usuarioActual.value !== null;
-  }
-
-  getDashboardMetrics(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/admin/dashboard-metrics`).pipe(
-      timeout(5000),
-      catchError((error: any) => {
-        console.error('Error obteniendo métricas:', error);
-        return throwError(error);
-      }),
-    );
-  }
-
-  private redirigirPorRol(rol: string): void {
-    switch (rol.toLowerCase()) {
+  redirigirPorRol(rol: string): void {
+    switch ((rol || '').toLowerCase()) {
       case 'admin':
         this.router.navigate(['/admin']);
         break;
@@ -104,13 +91,111 @@ export class Auth {
         this.router.navigate(['/home']);
     }
   }
+
+  redirigirUsuarioActual(): void {
+    const usuario = this.getUsuarioActual();
+    if (usuario?.role) {
+      this.redirigirPorRol(usuario.role);
+      return;
+    }
+
+    if (isPlatformBrowser(this.platformId)) {
+      const usuarioGuardado = localStorage.getItem('usuario');
+      if (usuarioGuardado) {
+        try {
+          const parsed = JSON.parse(usuarioGuardado) as Usuario;
+          this.usuarioActual.next(parsed);
+          this.redirigirPorRol(parsed.role);
+          return;
+        } catch {
+          localStorage.removeItem('usuario');
+        }
+      }
+    }
+
+    this.router.navigate(['/login']);
+  }
+
+isAuthenticated(): boolean {
+  if (this.usuarioActual.value) {
+    return true;
+  }
+
+  if (isPlatformBrowser(this.platformId)) {
+    const usuarioGuardado = localStorage.getItem('usuario');
+    if (usuarioGuardado) {
+      try {
+        this.usuarioActual.next(JSON.parse(usuarioGuardado));
+        return true;
+      } catch {
+        localStorage.removeItem('usuario');
+      }
+    }
+  }
+
+  return false;
+}
+
+
+  getDashboardMetrics(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/admin/dashboard-metrics`).pipe(
+      timeout(5000),
+      catchError((error: any) => {
+        console.error('Error obteniendo métricas:', error);
+        return throwError(error);
+      }),
+    );
+  }
   actualizarUsuario(usuario: Usuario): void {
     this.usuarioActual.next(usuario);
   }
 
   setActiveNavSection(section: number): void {
-  this.activeNavSection.next(section);
+    this.activeNavSection.next(section);
+  }
+
+  cargarUsuarioDesdeStorage(): void {
+
+  if (isPlatformBrowser(this.platformId)) {
+
+    const usuarioGuardado = localStorage.getItem('usuario');
+
+    if (usuarioGuardado) {
+
+      this.usuarioActual.next(JSON.parse(usuarioGuardado));
+
+    }
+
+  }
+
 }
+
+initAuth(): Promise<void> {
+
+  return new Promise((resolve) => {
+
+    if (isPlatformBrowser(this.platformId)) {
+
+      const usuarioGuardado = localStorage.getItem('usuario');
+
+      if (usuarioGuardado) {
+
+        this.usuarioActual.next(JSON.parse(usuarioGuardado));
+
+      }
+
+    }
+
+    resolve();
+
+  });
+
 }
+
+
+
+}
+
+
 
 

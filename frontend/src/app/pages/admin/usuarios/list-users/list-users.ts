@@ -6,7 +6,8 @@ import { Subscription } from 'rxjs';
 import { NavComponent   } from '../../../../components/nav-component/nav-component';
 import { Footer } from '../../../../components/footer/footer';
 import { ChangeDetectorRef } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router,  RouterLink } from '@angular/router';
+
 
 interface Usuario {
   id: number;
@@ -23,7 +24,7 @@ interface Usuario {
 @Component({
   selector: 'app-list-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, NavComponent, Footer],
+  imports: [CommonModule, FormsModule, NavComponent, Footer, RouterLink],
   templateUrl: './list-users.html',
   styleUrl: './list-users.css',
 })
@@ -40,7 +41,7 @@ export class ListUsers implements OnInit, OnDestroy {
   private apiUrl = 'http://localhost:8000';
   private subscription?: Subscription;
 
-  constructor(private http: HttpClient, private cd: ChangeDetectorRef)  {}
+  constructor(private http: HttpClient, private cd: ChangeDetectorRef, private router: Router)  {}
 
   ngOnInit() {
     this.loadUsuarios();
@@ -154,15 +155,10 @@ activarUsuario(id: number): void {
       });
   }
 
+editarUsuario(id: number): void {
+  this.router.navigate(['/editarUsuarios', id]);
+}
 
-  
-  editarUsuario(id: number): void {
-    console.log('Editar usuario:', id);
-  }
-
-  crearUsuario(): void {
-    console.log('Crear usuario');
-  }
 
 eliminarUsuario(id: number): void {
   if (!confirm('¿Está seguro de que desea eliminar este usuario?')) return;
@@ -172,19 +168,15 @@ eliminarUsuario(id: number): void {
       next: (response) => {
 
         if (response.status === 'success') {
-
-          // 👇 Crear NUEVA referencia del array
-          const nuevosUsuarios = this.usuarios.filter(u => u.id !== id);
-          this.usuarios = nuevosUsuarios;
-
+          this.usuarios = this.usuarios.filter(u => u.id !== id);
+          this.usuariosFiltered = this.usuariosFiltered.filter(u => u.id !== id);
+          this.updatePagedUsuarios();
           this.successMessage = 'Usuario eliminado correctamente';
-
-          // 👇 FORZAR DETECCIÓN (importante si usas OnPush)
-          this.cd.markForCheck();
-
+          this.cd.detectChanges();
+          
           setTimeout(() => {
             this.successMessage = '';
-            this.cd.markForCheck();
+            this.cd.detectChanges();
           }, 3000);
         }
       },

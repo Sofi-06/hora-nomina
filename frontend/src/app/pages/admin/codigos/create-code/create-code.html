@@ -1,0 +1,87 @@
+<app-nav-component></app-nav-component>
+
+<div class="create-code-container">
+  <h2 class="title">
+    <i class="fas fa-cogs"></i> Crear Código
+  </h2>
+
+  <div *ngIf="errorMessage" class="alert alert-error">
+    <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    <i class="fas fa-check-circle"></i> {{ successMessage }}
+  </div>
+
+  <form (ngSubmit)="onSubmit()" class="form-card">
+    <div class="form-group">
+      <label for="code">Código *</label>
+      <input
+        id="code"
+        name="code"
+        type="text"
+        [(ngModel)]="code"
+        [disabled]="isLoading"
+        maxlength="20"
+        placeholder="Ej: COD-001"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="name">Nombre *</label>
+      <input
+        id="name"
+        name="name"
+        type="text"
+        [(ngModel)]="name"
+        [disabled]="isLoading"
+        maxlength="100"
+        placeholder="Ej: Planeación Académica"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="description">Descripción *</label>
+      <textarea
+        id="description"
+        name="description"
+        [(ngModel)]="description"
+        [disabled]="isLoading"
+        maxlength="1000"
+        rows="5"
+        placeholder="Describe el código..."
+        required
+      ></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="unit_id">Unidad *</label>
+      <select
+        id="unit_id"
+        name="unit_id"
+        [(ngModel)]="unit_id"
+        [disabled]="isLoading"
+        required
+      >
+        <option [ngValue]="null" disabled>Seleccione una unidad</option>
+        <option *ngFor="let unit of units" [ngValue]="unit.id">
+          {{ unit.name }}
+        </option>
+      </select>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn-cancel" (click)="cancelar()" [disabled]="isLoading">
+        Cancelar
+      </button>
+      <button type="submit" class="btn-save" [disabled]="isLoading">
+        <i *ngIf="isLoading" class="fas fa-spinner fa-spin"></i>
+        {{ isLoading ? 'Guardando...' : 'Guardar Código' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<app-footer></app-footer>

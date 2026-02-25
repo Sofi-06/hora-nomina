@@ -4,17 +4,47 @@ import sys
 import os
 from dotenv import load_dotenv
 import mysql.connector
-from datetime import datetime, timedelta
+from datetime import datetime
+from io import BytesIO
+from pydantic import BaseModel
+from typing import Optional, Literal
+import bcrypt
+import unicodedata
+import urllib.parse
+from fastapi.responses import StreamingResponse
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
 # Agregar el directorio padre al path para poder importar auth
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from auth.auth import router as auth_router
+from routers.docente import router as docente_router
 from baseDatos.database import get_database_connection
 
 load_dotenv()
 
 app = FastAPI()
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
+
+
+#Llamado de rutas para las consultas de los otros dos roles
+#app.include_router(director.router)
+app.include_router(docente_router)
+
+class CreateUserRequest(BaseModel):
+    name: str
+    email: str
+    password: Optional[str] = None  # Opcional para editar
+    user_type: Literal["Admin", "Docente", "Director"]
+    identification_type: Literal["CC", "CE"] = "CC"
+    identification: str
+    gender: Literal["Femenino", "Masculino"]
+    state: Literal["Activo", "Inactivo"] = "Activo"
+    department_id: Optional[int] = None
+    unit_ids: Optional[list[int]] = None
 
 app.add_middleware(
     CORSMiddleware,
@@ -438,3 +468,1882 @@ def delete_user(user_id: int):
             "status": "error",
             "message": str(e)
         }
+
+@app.get("/departments")
+def get_departments():
+    """Obtiene lista de departamentos"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT id, name
+            FROM departments
+            ORDER BY name ASC
+        """)
+        departamentos = cursor.fetchall()
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "data": departamentos
+        }
+
+    except Exception as e:
+        print(f"❌ Error obteniendo departamentos: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+        
+        
+@app.get("/units")
+def get_units():
+    """Obtiene lista de unidades"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT id, name
+            FROM units
+            ORDER BY name ASC
+        """)
+        unidades = cursor.fetchall()
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "data": unidades
+        }
+
+    except Exception as e:
+        print(f"❌ Error obteniendo unidades: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.post("/admin/users")
+def create_user(payload: CreateUserRequest):
+    """Crea un nuevo usuario"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor()
+
+        # Validar email o identificacion duplicados
+        cursor.execute(
+            "SELECT id FROM users WHERE email = %s OR identification = %s",
+            (payload.email, payload.identification)
+        )
+        if cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Email o identificación ya existen"
+            }
+
+        password_hash = bcrypt.hashpw(
+            payload.password.encode("utf-8"),
+            bcrypt.gensalt()
+        ).decode("utf-8")
+
+        now = datetime.now()
+
+        cursor.execute("""
+            INSERT INTO users
+            (name, email, password, user_type, identification_type, identification, gender, state, department_id, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            payload.name,
+            payload.email,
+            password_hash,
+            payload.user_type,
+            payload.identification_type,
+            payload.identification,
+            payload.gender,
+            payload.state,
+            payload.department_id,
+            now,
+            now
+        ))
+
+        user_id = cursor.lastrowid
+
+       
+        if payload.unit_ids and len(payload.unit_ids) > 0:
+            for unit_id in payload.unit_ids:
+                cursor.execute("""
+                    INSERT INTO unit_user
+                    (user_id, unit_id, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s)
+                """, (user_id, unit_id, now, now))
+
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "message": "Usuario creado correctamente",
+            "data": {"id": user_id}
+        }
+
+    except Exception as e:
+        print(f"❌ Error creando usuario: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+        
+@app.get("/admin/users/{user_id}")
+def get_user(user_id: int):
+    """Obtiene los datos de un usuario específico"""
+    try:
+        conexion = get_database_connection()
+        
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+        
+        cursor = conexion.cursor(dictionary=True)
+        
+        # Obtener datos del usuario
+        cursor.execute("""
+            SELECT
+                users.id,
+                users.name,
+                users.email,
+                users.user_type,
+                users.identification_type,
+                users.identification,
+                users.gender,
+                users.state,
+                users.department_id,
+                GROUP_CONCAT(DISTINCT unit_user.unit_id) AS unit_ids
+            FROM users
+            LEFT JOIN unit_user ON unit_user.user_id = users.id
+            WHERE users.id = %s
+            GROUP BY users.id
+        """, (user_id,))
+        
+        usuario = cursor.fetchone()
+        cursor.close()
+        conexion.close()
+        
+        if not usuario:
+            return {
+                "status": "error",
+                "message": "Usuario no encontrado"
+            }
+        # Convertir unit_ids de string a lista
+        if usuario['unit_ids']:
+            usuario['unit_ids'] = [int(uid) for uid in usuario['unit_ids'].split(',')]
+        else:
+            usuario['unit_ids'] = []
+        
+        return {
+            "status": "success",
+            "data": usuario
+        }
+    
+    except Exception as e:
+        print(f"❌ Error obteniendo usuario: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.put("/admin/users/{user_id}")
+def update_user(user_id: int, payload: CreateUserRequest):
+    """Actualiza los datos de un usuario"""
+    try:
+        conexion = get_database_connection()
+        
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+        
+        cursor = conexion.cursor()
+        
+        # Verificar que el usuario existe
+        cursor.execute("SELECT id FROM users WHERE id = %s", (user_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Usuario no encontrado"
+            }
+        
+        # Validar email duplicado (excepto el del usuario actual)
+        cursor.execute(
+            "SELECT id FROM users WHERE email = %s AND id != %s",
+            (payload.email, user_id)
+        )
+        if cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "El email ya está registrado por otro usuario"
+            }
+        
+        now = datetime.now()
+        
+        # Preparar la actualización
+        update_fields = [
+            "name = %s",
+            "email = %s",
+            "user_type = %s",
+            "identification_type = %s",
+            "identification = %s",
+            "gender = %s",
+            "state = %s",
+            "department_id = %s",
+            "updated_at = %s"
+        ]
+        
+        update_values = [
+            payload.name,
+            payload.email,
+            payload.user_type,
+            payload.identification_type,
+            payload.identification,
+            payload.gender,
+            payload.state,
+            payload.department_id,
+            now
+        ]
+        
+        # Si se proporciona contraseña, actualizarla
+        if hasattr(payload, 'password') and payload.password:
+            password_hash = bcrypt.hashpw(
+                payload.password.encode("utf-8"),
+                bcrypt.gensalt()
+            ).decode("utf-8")
+            update_fields.append("password = %s")
+            update_values.append(password_hash)
+        
+        update_values.append(user_id)
+        
+        # Actualizar el usuario
+        query = f"UPDATE users SET {', '.join(update_fields)} WHERE id = %s"
+        cursor.execute(query, update_values)
+        
+        # Actualizar las unidades
+        cursor.execute("DELETE FROM unit_user WHERE user_id = %s", (user_id,))
+        
+        if payload.unit_ids and len(payload.unit_ids) > 0:
+            for unit_id in payload.unit_ids:
+                cursor.execute("""
+                    INSERT INTO unit_user
+                    (user_id, unit_id, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s)
+                """, (user_id, unit_id, now, now))
+        
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+        
+        return {
+            "status": "success",
+            "message": "Usuario actualizado correctamente"
+        }
+    
+    except Exception as e:
+        print(f"❌ Error actualizando usuario: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+        
+        
+        # ===== ENDPOINTS PARA UNIDADES =====
+
+@app.get("/admin/units")
+def get_admin_units():
+    """Obtiene lista de unidades con cantidad de códigos y docentes"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT 
+                u.id,
+                u.name,
+                COUNT(DISTINCT c.id) AS total_codes,
+                COUNT(DISTINCT uu.user_id) AS total_docentes
+            FROM units u
+            LEFT JOIN codes c ON c.unit_id = u.id
+            LEFT JOIN unit_user uu ON uu.unit_id = u.id
+            GROUP BY u.id
+            ORDER BY u.name ASC
+        """)
+        unidades = cursor.fetchall()
+        
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "data": unidades
+        }
+
+    except Exception as e:
+        print(f"❌ Error obteniendo unidades: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.get("/admin/units/{unit_id}")
+def get_unit(unit_id: int):
+    """Obtiene los datos de una unidad específica"""
+    try:
+        conexion = get_database_connection()
+        
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+        
+        cursor = conexion.cursor(dictionary=True)
+        
+        cursor.execute("""
+            SELECT 
+                u.id,
+                u.name,
+                GROUP_CONCAT(CONCAT(us.id, '|', us.name) SEPARATOR ', ') AS docentes
+            FROM units u
+            LEFT JOIN unit_user uu ON uu.unit_id = u.id
+            LEFT JOIN users us ON us.id = uu.user_id AND us.user_type = 'Docente'
+            WHERE u.id = %s
+            GROUP BY u.id
+        """, (unit_id,))
+        
+        unidad = cursor.fetchone()
+        cursor.close()
+        conexion.close()
+        
+        if not unidad:
+            return {
+                "status": "error",
+                "message": "Unidad no encontrada"
+            }
+        
+        docentes = []
+        if unidad['docentes']:
+            for docente_str in unidad['docentes'].split(', '):
+                if '|' in docente_str:
+                    doc_id, doc_name = docente_str.split('|')
+                    docentes.append({
+                        'id': int(doc_id),
+                        'name': doc_name
+                    })
+        
+        unidad['docentes'] = docentes
+        
+        return {
+            "status": "success",
+            "data": unidad
+        }
+    
+    except Exception as e:
+        print(f"❌ Error obteniendo unidad: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.delete("/admin/units/{unit_id}")
+def delete_unit(unit_id: int):
+    """Elimina una unidad por ID"""
+    try:
+        conexion = get_database_connection()
+        
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+        
+        cursor = conexion.cursor()
+        
+        # Verificar que la unidad existe
+        cursor.execute("SELECT id FROM units WHERE id = %s", (unit_id,))
+        unidad = cursor.fetchone()
+        
+        if not unidad:
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Unidad no encontrada"
+            }
+        
+        # Eliminar primero las relaciones en unit_user
+        cursor.execute("DELETE FROM unit_user WHERE unit_id = %s", (unit_id,))
+        
+        # Luego eliminar la unidad
+        cursor.execute("DELETE FROM units WHERE id = %s", (unit_id,))
+        conexion.commit()
+        
+        cursor.close()
+        conexion.close()
+        
+        print(f"✅ Unidad {unit_id} eliminada")
+        
+        return {
+            "status": "success",
+            "message": f"Unidad {unit_id} eliminada correctamente"
+        }
+    
+    except Exception as e:
+        print(f"❌ Error eliminando unidad: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+        
+@app.post("/admin/units")
+def create_unit(payload: dict):
+            """Crea una nueva unidad"""
+            try:
+                conexion = get_database_connection()
+        
+                if not conexion:
+                    return {
+                        "status": "error",
+                        "message": "No se pudo conectar a la base de datos"
+                    }
+        
+                cursor = conexion.cursor()
+        
+                # Validar que no exista una unidad con el mismo nombre
+                cursor.execute("SELECT id FROM units WHERE name = %s", (payload['name'],))
+                if cursor.fetchone():
+                    cursor.close()
+                    conexion.close()
+                    return {
+                        "status": "error",
+                        "message": "Ya existe una unidad con ese nombre"
+                    }
+        
+                now = datetime.now()
+        
+                # Insertar la unidad
+                cursor.execute("""
+                    INSERT INTO units (name, created_at, updated_at)
+                    VALUES (%s, %s, %s)
+                """, (payload['name'], now, now))
+        
+                unit_id = cursor.lastrowid
+                conexion.commit()
+                cursor.close()
+                conexion.close()
+        
+                print(f"✅ Unidad {unit_id} creada: {payload['name']}")
+        
+                return {
+                    "status": "success",
+                    "message": "Unidad creada correctamente",
+                    "data": {"id": unit_id}
+                }
+        
+            except Exception as e:
+                print(f"❌ Error creando unidad: {e}")
+                return {
+                    "status": "error",
+                    "message": str(e)
+                }  
+                
+@app.put("/admin/units/{unit_id}")
+def update_unit(unit_id: int, payload: dict):
+    """Actualiza una unidad existente"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor()
+
+        # Verificar que la unidad existe
+        cursor.execute("SELECT id FROM units WHERE id = %s", (unit_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Unidad no encontrada"
+            }
+
+        # Validar que no exista otra unidad con el mismo nombre
+        cursor.execute(
+            "SELECT id FROM units WHERE name = %s AND id != %s",
+            (payload['name'], unit_id)
+        )
+        if cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Ya existe otra unidad con ese nombre"
+            }
+
+        now = datetime.now()
+
+        # Actualizar la unidad
+        cursor.execute("""
+            UPDATE units 
+            SET name = %s, updated_at = %s
+            WHERE id = %s
+        """, (payload['name'], now, unit_id))
+
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+
+        print(f"✅ Unidad {unit_id} actualizada: {payload['name']}")
+
+        return {
+            "status": "success",
+            "message": "Unidad actualizada correctamente"
+        }
+
+    except Exception as e:
+        print(f"❌ Error actualizando unidad: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+        
+# ===== ENDPOINTS PARA CODIGOS =====
+
+@app.get("/admin/codes")
+def get_admin_codes():
+    """Obtiene lista de codigos con unidad y cantidad de actividades"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT
+            c.id,
+            c.code,
+            c.name,
+            u.name AS unit,
+            COUNT(DISTINCT t.id) AS types,
+            GROUP_CONCAT(DISTINCT t.name ORDER BY t.name SEPARATOR ', ') AS type_names
+            FROM codes c
+            LEFT JOIN units u ON u.id = c.unit_id
+            LEFT JOIN types t ON t.code_id = c.id
+            GROUP BY c.id
+            ORDER BY c.code ASC
+        """)
+        codigos = cursor.fetchall()
+
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "data": codigos
+        }
+
+    except Exception as e:
+        print(f"❌ Error obteniendo codigos: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.delete("/admin/codes/{code_id}")
+def delete_code(code_id: int):
+    """Elimina un codigo por ID"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor()
+
+        cursor.execute("SELECT id FROM codes WHERE id = %s", (code_id,))
+        codigo = cursor.fetchone()
+
+        if not codigo:
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Codigo no encontrado"
+            }
+
+        # Solo eliminar el código
+        cursor.execute("DELETE FROM codes WHERE id = %s", (code_id,))
+        conexion.commit()
+
+        cursor.close()
+        conexion.close()
+
+        print(f"✅ Codigo {code_id} eliminado")
+
+        return {
+            "status": "success",
+            "message": f"Codigo {code_id} eliminado correctamente"
+        }
+
+    except Exception as e:
+        print(f"❌ Error eliminando codigo: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.get("/admin/types")
+def get_all_types():
+    """Obtiene todos los tipos de actividades"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        
+        cursor.execute("""
+            SELECT 
+                t.id, 
+                t.name, 
+                t.code_id,
+                c.code,
+                c.name as code_name,
+                t.created_at, 
+                t.updated_at
+            FROM types t
+            LEFT JOIN codes c ON c.id = t.code_id
+            ORDER BY t.name ASC
+        """)
+        tipos = cursor.fetchall()
+
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "data": tipos
+        }
+
+    except Exception as e:
+        print(f"❌ Error obteniendo tipos: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.get("/admin/codes/{code_id}/types")
+def get_types_by_code(code_id: int):
+    """Obtiene todos los tipos asociados a un codigo específico con cantidad de actividades"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        
+        # Verificar que el codigo existe
+        cursor.execute("SELECT id, code, name FROM codes WHERE id = %s", (code_id,))
+        codigo = cursor.fetchone()
+        
+        if not codigo:
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Codigo no encontrado"
+            }
+        
+        # Obtener los tipos asociados con conteo de actividades
+        cursor.execute("""
+            SELECT 
+                t.id, 
+                t.name, 
+                t.code_id, 
+                COUNT(a.id) as activities_count,
+                t.created_at, 
+                t.updated_at
+            FROM types t
+            LEFT JOIN activities a ON t.id = a.type_id
+            WHERE t.code_id = %s
+            GROUP BY t.id
+            ORDER BY t.name ASC
+        """, (code_id,))
+        tipos = cursor.fetchall()
+
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "data": {
+                "code": codigo,
+                "types": tipos
+            }
+        }
+
+    except Exception as e:
+        print(f"❌ Error obteniendo tipos: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+        
+        
+@app.post("/admin/codes")
+def create_code(payload: dict):
+    try:
+        conexion = get_database_connection()
+        if not conexion:
+            return {"status": "error", "message": "No se pudo conectar a la base de datos"}
+
+        code = (payload.get("code") or "").strip()
+        name = (payload.get("name") or "").strip()
+        description = (payload.get("description") or "").strip()
+        unit_id = payload.get("unit_id")
+
+        if not code or not name or not description or not unit_id:
+            return {"status": "error", "message": "Todos los campos son obligatorios"}
+
+        if len(code) > 20 or len(name) > 100 or len(description) > 1000:
+            return {"status": "error", "message": "Longitud de campos inválida"}
+
+        cursor = conexion.cursor()
+        cursor.execute("SELECT id FROM units WHERE id = %s", (unit_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {"status": "error", "message": "Unidad no encontrada"}
+
+        cursor.execute("SELECT id FROM codes WHERE code = %s", (code,))
+        if cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {"status": "error", "message": "Ya existe un código con ese valor"}
+
+        now = datetime.now()
+        cursor.execute("""
+            INSERT INTO codes (code, name, description, unit_id, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (code, name, description, unit_id, now, now))
+        code_id = cursor.lastrowid
+
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "message": "Código creado correctamente",
+            "data": {"id": code_id}
+        }
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+    
+@app.get("/admin/codes/{code_id}")
+def get_code(code_id: int):
+    """Obtiene un codigo por ID"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT id, code, name, description, unit_id
+            FROM codes
+            WHERE id = %s
+        """, (code_id,))
+        codigo = cursor.fetchone()
+
+        cursor.close()
+        conexion.close()
+
+        if not codigo:
+            return {
+                "status": "error",
+                "message": "Codigo no encontrado"
+            }
+
+        return {
+            "status": "success",
+            "data": codigo
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.put("/admin/codes/{code_id}")
+def update_code(code_id: int, payload: dict):
+    """Actualiza un codigo existente"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        code = (payload.get("code") or "").strip()
+        name = (payload.get("name") or "").strip()
+        description = (payload.get("description") or "").strip()
+        unit_id = payload.get("unit_id")
+
+        if not code or not name or not description or not unit_id:
+            return {
+                "status": "error",
+                "message": "Todos los campos son obligatorios"
+            }
+
+        if len(code) > 20 or len(name) > 100 or len(description) > 1000:
+            return {
+                "status": "error",
+                "message": "Longitud de campos inválida"
+            }
+
+        cursor = conexion.cursor()
+
+        cursor.execute("SELECT id FROM codes WHERE id = %s", (code_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Codigo no encontrado"
+            }
+
+        cursor.execute("SELECT id FROM units WHERE id = %s", (unit_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Unidad no encontrada"
+            }
+
+        cursor.execute(
+            "SELECT id FROM codes WHERE code = %s AND id != %s",
+            (code, code_id)
+        )
+        if cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Ya existe otro código con ese valor"
+            }
+
+        now = datetime.now()
+        cursor.execute("""
+            UPDATE codes
+            SET code = %s, name = %s, description = %s, unit_id = %s, updated_at = %s
+            WHERE id = %s
+        """, (code, name, description, unit_id, now, code_id))
+
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "message": "Código actualizado correctamente"
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }  
+        
+        
+@app.get("/admin/departments")
+def get_admin_departments():
+    """Obtiene lista de departamentos"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT
+            d.id,
+            d.name,
+            COUNT(u.id) AS total_docentes
+            FROM departments d
+            LEFT JOIN users u
+            ON u.department_id = d.id
+            AND u.user_type = 'Docente'
+            GROUP BY d.id, d.name
+            ORDER BY d.name ASC
+            """)
+        
+        departamentos = cursor.fetchall()
+        
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "data": departamentos
+        }
+
+    except Exception as e:
+        print(f"❌ Error obteniendo departamentos: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.get("/admin/departments/{dept_id}")
+def get_department(dept_id: int):
+    """Obtiene un departamento por ID"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT id, name
+            FROM departments
+            WHERE id = %s
+        """, (dept_id,))
+        departamento = cursor.fetchone()
+
+        cursor.close()
+        conexion.close()
+
+        if not departamento:
+            return {
+                "status": "error",
+                "message": "Departamento no encontrado"
+            }
+
+        return {
+            "status": "success",
+            "data": departamento
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.post("/admin/departments")
+def create_department(payload: dict):
+    """Crea un nuevo departamento"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        name = (payload.get("name") or "").strip()
+
+        if not name:
+            return {
+                "status": "error",
+                "message": "El nombre es obligatorio"
+            }
+
+        if len(name) > 64:
+            return {
+                "status": "error",
+                "message": "El nombre no puede superar 64 caracteres"
+            }
+
+        cursor = conexion.cursor()
+
+        cursor.execute("SELECT id FROM departments WHERE name = %s", (name,))
+        if cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Ya existe un departamento con ese nombre"
+            }
+
+        now = datetime.now()
+        cursor.execute("""
+            INSERT INTO departments (name, created_at, updated_at)
+            VALUES (%s, %s, %s)
+        """, (name, now, now))
+        dept_id = cursor.lastrowid
+
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "message": "Departamento creado correctamente",
+            "data": {"id": dept_id}
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.put("/admin/departments/{dept_id}")
+def update_department(dept_id: int, payload: dict):
+    """Actualiza un departamento"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        name = (payload.get("name") or "").strip()
+
+        if not name:
+            return {
+                "status": "error",
+                "message": "El nombre es obligatorio"
+            }
+
+        if len(name) > 64:
+            return {
+                "status": "error",
+                "message": "El nombre no puede superar 64 caracteres"
+            }
+
+        cursor = conexion.cursor()
+
+        cursor.execute("SELECT id FROM departments WHERE id = %s", (dept_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Departamento no encontrado"
+            }
+
+        cursor.execute(
+            "SELECT id FROM departments WHERE name = %s AND id != %s",
+            (name, dept_id)
+        )
+        if cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Ya existe otro departamento con ese nombre"
+            }
+
+        now = datetime.now()
+        cursor.execute("""
+            UPDATE departments
+            SET name = %s, updated_at = %s
+            WHERE id = %s
+        """, (name, now, dept_id))
+
+        conexion.commit()
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "message": "Departamento actualizado correctamente"
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.delete("/admin/departments/{dept_id}")
+def delete_department(dept_id: int):
+    """Elimina un departamento"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor()
+
+        cursor.execute("SELECT id FROM departments WHERE id = %s", (dept_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Departamento no encontrado"
+            }
+
+        cursor.execute("DELETE FROM departments WHERE id = %s", (dept_id,))
+        conexion.commit()
+
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "message": "Departamento eliminado correctamente"
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+        
+        # ===== ENDPOINTS PARA ACTIVIDADES =====
+        
+@app.get("/admin/activities")
+def get_admin_activities(
+    fecha_inicio: str = None,
+    fecha_final: str = None,
+    estado: str = None,
+    departamento: str = None,
+    unidad: str = None
+):
+    """Obtiene lista de actividades para admin con filtros opcionales"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        
+        # Base query with unit joins
+        query = """
+        SELECT
+            a.id,
+            a.evidence_file,
+            u.name AS user_name,
+            d.name AS department,
+            GROUP_CONCAT(DISTINCT un.name ORDER BY un.name SEPARATOR ', ') AS unit,
+            CONCAT(c.code, ' - ', c.name) AS code,
+            a.state,
+            a.description,
+            a.created_at,
+            a.updated_at
+        FROM activities a
+        LEFT JOIN users u ON u.id = a.user_id
+        LEFT JOIN departments d ON d.id = u.department_id
+        LEFT JOIN types t ON t.id = a.type_id
+        LEFT JOIN codes c ON c.id = t.code_id
+        LEFT JOIN unit_user uu ON uu.user_id = u.id
+        LEFT JOIN units un ON un.id = uu.unit_id
+        WHERE 1=1
+        """
+        
+        # Add optional filters
+        if fecha_inicio:
+            query += f" AND DATE(a.created_at) >= '{fecha_inicio}'"
+        if fecha_final:
+            query += f" AND DATE(a.created_at) <= '{fecha_final}'"
+        if estado:
+            query += f" AND a.state = '{estado}'"
+        if departamento:
+            query += f" AND d.name = '{departamento}'"
+        if unidad:
+            query += f" AND un.name = '{unidad}'"
+        
+        query += """
+        GROUP BY
+            a.id,
+            a.evidence_file,
+            u.name,
+            d.name,
+            c.code,
+            c.name,
+            a.state,
+            a.description,
+            a.created_at,
+            a.updated_at
+        ORDER BY a.created_at DESC
+        """
+        
+        cursor.execute(query)
+        actividades = cursor.fetchall()
+
+        cursor.close()
+        conexion.close()
+
+        return {
+            "status": "success",
+            "data": actividades
+        }
+
+    except Exception as e:
+        print(f"Error obteniendo actividades: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+class UpdateActivityStatePayload(BaseModel):
+    state: str
+    observations: Optional[str] = None
+
+@app.get("/admin/activities/{activity_id}")
+def get_activity_by_id(activity_id: int):
+    conn = get_database_connection()
+    cur = conn.cursor(dictionary=True)
+    try:
+        cur.execute("""
+    SELECT
+        a.id,
+        a.evidence_file,          -- <-- agrega esto
+        u.name AS user_name,
+        CONCAT(c.code, ' - ', c.name) AS code,
+        a.hours AS dedicated_hours,
+        a.description,
+        a.evidence_file AS document_name,
+        a.evidence_file AS document_url,
+        a.month,
+        a.created_at,
+        a.state,
+        a.observations
+    FROM activities a
+    JOIN users u ON u.id = a.user_id
+    LEFT JOIN types t ON t.id = a.type_id
+    LEFT JOIN codes c ON c.id = t.code_id
+    WHERE a.id = %s
+""", (activity_id,))
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Actividad no encontrada")
+        # Calcular el mes como un mes antes de created_at
+        created_at = row.get('created_at')
+        if created_at:
+            from datetime import datetime
+            if isinstance(created_at, str):
+                dt = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S") if len(created_at) > 10 else datetime.strptime(created_at, "%Y-%m-%d")
+            else:
+                dt = created_at
+            prev_month = dt.month - 1
+            year = dt.year
+            if prev_month == 0:
+                prev_month = 12
+                year -= 1
+            meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+            row['month'] = f"{meses[prev_month-1]} {year}"
+        else:
+            row['month'] = None
+        return row
+    finally:
+        cur.close()
+        conn.close()
+
+@app.put("/admin/activities/{activity_id}/state")
+def update_activity_state(activity_id: int, payload: UpdateActivityStatePayload):
+    conn = get_database_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            UPDATE activities
+            SET state = %s,
+                observations = %s,
+                updated_at = NOW()
+            WHERE id = %s
+        """, (payload.state, payload.observations, activity_id))
+        conn.commit()
+
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Actividad no encontrada")
+
+        return {"message": "Estado actualizado correctamente"}
+    finally:
+        cur.close()
+        conn.close()
+
+
+    # Antes del endpoint /descargar
+def limpiar_nombre(nombre: str) -> str:
+    nombre = unicodedata.normalize('NFKD', nombre)
+    nombre = nombre.encode('ascii', 'ignore').decode('ascii')
+    return nombre
+    
+@app.get("/descargar/{id}")
+def descargar_archivo(id: int):
+    try:
+        conn = get_database_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT evidence_file, user_id FROM activities WHERE id=%s",
+            (id,)
+        )
+
+        resultado = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if not resultado or not resultado[0]:
+            raise HTTPException(status_code=404, detail="No existe registro en BD")
+
+        archivo = resultado[0]
+        user_id = resultado[1]
+
+        # Carpetas organizadas por user_id
+        ruta = os.path.join(UPLOAD_DIR, str(user_id), archivo)
+
+        print(f"Buscando archivo en: {ruta}")
+
+        if not os.path.exists(ruta):
+            raise HTTPException(status_code=404, detail=f"Archivo no encontrado en: {ruta}")
+
+        return StreamingResponse(
+    open(ruta, "rb"),
+    media_type="application/octet-stream",
+    headers={
+        "Content-Disposition": f"attachment; filename*=UTF-8''{urllib.parse.quote(archivo)}"
+    }
+)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print("ERROR:", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/visualizar/{id}")
+def visualizar_archivo(id: int):
+    """Endpoint para visualizar archivo en el navegador (inline)."""
+    try:
+        conn = get_database_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT evidence_file, user_id FROM activities WHERE id=%s",
+            (id,)
+        )
+
+        resultado = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if not resultado or not resultado[0]:
+            raise HTTPException(status_code=404, detail="No existe registro en BD")
+
+        archivo = resultado[0]
+        user_id = resultado[1]
+
+        ruta = os.path.join(UPLOAD_DIR, str(user_id), archivo)
+
+        if not os.path.exists(ruta):
+            raise HTTPException(status_code=404, detail=f"Archivo no encontrado: {ruta}")
+
+        # Detectar MIME type por extensión
+        ext = archivo.lower().split('.')[-1] if '.' in archivo else ''
+        mime_map = {
+            'pdf': 'application/pdf',
+            'png': 'image/png',
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'gif': 'image/gif',
+            'webp': 'image/webp',
+            'svg': 'image/svg+xml'
+        }
+        media_type = mime_map.get(ext, 'application/octet-stream')
+
+        return StreamingResponse(
+            open(ruta, "rb"),
+            media_type=media_type,
+            headers={
+                "Content-Disposition": f"inline; filename*=UTF-8''{urllib.parse.quote(archivo)}"
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print("ERROR visualizar:", e)
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    #====== ENDPOINTS PARA TIPOS =====
+    
+@app.post("/admin/types")
+def create_type(payload: dict):
+    """Crea un nuevo tipo de actividad asociado a un código"""
+    try:
+        conexion = get_database_connection()
+        
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+        
+        # Validar inputs
+        name = (payload.get("name") or "").strip()
+        code_id = payload.get("code_id")
+        
+        if not name or not code_id:
+            return {
+                "status": "error",
+                "message": "Nombre y código son requeridos"
+            }
+        
+        # Verificar que el código existe
+        cursor.execute("SELECT id FROM codes WHERE id = %s", (code_id,))
+        codigo = cursor.fetchone()
+        
+        if not codigo:
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Código no encontrado"
+            }
+        
+        # Insertar el nuevo tipo
+        cursor.execute("""
+            INSERT INTO types (name, code_id, created_at, updated_at)
+            VALUES (%s, %s, NOW(), NOW())
+        """, (name, code_id))
+        
+        conexion.commit()
+        type_id = cursor.lastrowid
+        
+        cursor.close()
+        conexion.close()
+        
+        print(f"✅ Tipo {name} creado para código {code_id}")
+        
+        return {
+            "status": "success",
+            "message": "Tipo creado correctamente",
+            "type": {
+                "id": type_id,
+                "name": name,
+                "code_id": code_id,
+                "created_at": None,
+                "updated_at": None
+            }
+        }
+    
+    except Exception as e:
+        print(f"❌ Error creando tipo: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.delete("/admin/types/{type_id}")
+def delete_type(type_id: int):
+    """Elimina un tipo de actividad por ID"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor()
+
+        # Verificar que el tipo existe
+        cursor.execute("SELECT id FROM types WHERE id = %s", (type_id,))
+        tipo = cursor.fetchone()
+
+        if not tipo:
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Tipo no encontrado"
+            }
+
+        # Eliminar el tipo
+        cursor.execute("DELETE FROM types WHERE id = %s", (type_id,))
+        conexion.commit()
+
+        cursor.close()
+        conexion.close()
+
+        print(f"✅ Tipo {type_id} eliminado")
+
+        return {
+            "status": "success",
+            "message": f"Tipo {type_id} eliminado correctamente"
+        }
+
+    except Exception as e:
+        print(f"❌ Error eliminando tipo: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.put("/admin/types/{type_id}")
+def update_type(type_id: int, data: dict):
+    """Actualiza un tipo de actividad por ID"""
+    try:
+        name = data.get("name")
+        
+        if not name or not isinstance(name, str) or len(name.strip()) == 0:
+            return {
+                "status": "error",
+                "message": "El nombre del tipo es requerido"
+            }
+        
+        conexion = get_database_connection()
+        
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+        
+        cursor = conexion.cursor(dictionary=True)
+        
+        # Verificar que el tipo existe
+        cursor.execute("SELECT id, code_id, name FROM types WHERE id = %s", (type_id,))
+        tipo = cursor.fetchone()
+        
+        if not tipo:
+            cursor.close()
+            conexion.close()
+            return {
+                "status": "error",
+                "message": "Tipo no encontrado"
+            }
+        
+        # Actualizar el tipo
+        cursor.execute(
+            "UPDATE types SET name = %s, updated_at = NOW() WHERE id = %s",
+            (name.strip(), type_id)
+        )
+        conexion.commit()
+        
+        cursor.close()
+        conexion.close()
+        
+        print(f"✅ Tipo {type_id} actualizado")
+        
+        return {
+            "status": "success",
+            "message": f"Tipo actualizado correctamente",
+            "type": {
+                "id": tipo["id"],
+                "code_id": tipo["code_id"],
+                "name": name.strip()
+            }
+        }
+    
+    except Exception as e:
+        print(f"❌ Error actualizando tipo: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+        
+        
+    # ===== ENDPOINTS PARA REPORTES =====
+
+@app.get("/admin/activity-states")
+def get_activity_states():
+    """Obtiene los estados disponibles de actividades"""
+    try:
+        states = [
+            "Aprobado",
+            "Revisión",
+            "Desaprobado",
+            "Reenviado",
+            "Con observaciones"
+        ]
+        
+        return {
+            "status": "success",
+            "data": [{"name": state} for state in states]
+        }
+    
+    except Exception as e:
+        print(f"❌ Error obteniendo estados: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.get("/admin/reports/excel")
+def download_reports_excel(
+    fecha_inicio: str = None,
+    fecha_final: str = None,
+    estado: str = None,
+    departamento: str = None,
+    unidad: str = None
+):
+    """Descarga un Excel de actividades aplicando los filtros seleccionados"""
+    try:
+        conexion = get_database_connection()
+
+        if not conexion:
+            return {
+                "status": "error",
+                "message": "No se pudo conectar a la base de datos"
+            }
+
+        cursor = conexion.cursor(dictionary=True)
+
+        query = """
+        SELECT
+            u.name AS user_name,
+            d.name AS department,
+            GROUP_CONCAT(DISTINCT un.name ORDER BY un.name SEPARATOR ', ') AS unit,
+            CONCAT(c.code, ' - ', c.name) AS code,
+            a.description,
+            a.created_at,
+            a.state
+        FROM activities a
+        LEFT JOIN users u ON u.id = a.user_id
+        LEFT JOIN departments d ON d.id = u.department_id
+        LEFT JOIN types t ON t.id = a.type_id
+        LEFT JOIN codes c ON c.id = t.code_id
+        LEFT JOIN unit_user uu ON uu.user_id = u.id
+        LEFT JOIN units un ON un.id = uu.unit_id
+        WHERE 1=1
+        """
+
+        params = []
+
+        if fecha_inicio:
+            query += " AND DATE(a.created_at) >= %s"
+            params.append(fecha_inicio)
+        if fecha_final:
+            query += " AND DATE(a.created_at) <= %s"
+            params.append(fecha_final)
+        if estado:
+            query += " AND a.state = %s"
+            params.append(estado)
+        if departamento:
+            query += " AND d.name = %s"
+            params.append(departamento)
+        if unidad:
+            query += " AND un.name = %s"
+            params.append(unidad)
+
+        query += """
+        GROUP BY
+            a.id,
+            u.name,
+            d.name,
+            c.code,
+            c.name,
+            a.description,
+            a.created_at,
+            a.state
+        ORDER BY a.created_at DESC
+        """
+
+        cursor.execute(query, params)
+        actividades = cursor.fetchall()
+
+        cursor.close()
+        conexion.close()
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Reporte"
+
+        headers = [
+            "Usuario",
+            "Departamento",
+            "Unidad",
+            "Actividad",
+            "Descripción",
+            "Fecha envío",
+            "Mes",
+            "Estado"
+        ]
+
+        ws.append(headers)
+
+        header_fill = PatternFill(fill_type="solid", fgColor="1F6FEB")
+        header_font = Font(color="FFFFFF", bold=True)
+        thin = Side(style="thin", color="D0D7DE")
+        cell_border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+        for cell in ws[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            cell.border = cell_border
+
+        month_names = {
+            1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril", 5: "Mayo", 6: "Junio",
+            7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
+        }
+
+        for item in actividades:
+            created_at = item.get("created_at")
+            fecha_envio = created_at.strftime("%d-%m-%Y") if created_at else "-"
+            mes = month_names.get(created_at.month, "-") if created_at else "-"
+
+            ws.append([
+                item.get("user_name") or "-",
+                item.get("department") or "-",
+                item.get("unit") or "-",
+                item.get("code") or "-",
+                item.get("description") or "-",
+                fecha_envio,
+                mes,
+                item.get("state") or "-"
+            ])
+
+        for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=1, max_col=8):
+            for cell in row:
+                cell.border = cell_border
+                cell.alignment = Alignment(vertical="top", wrap_text=True)
+
+        ws.freeze_panes = "A2"
+        ws.auto_filter.ref = None
+
+        column_widths = [24, 20, 28, 24, 44, 14, 14, 18]
+        for index, width in enumerate(column_widths, start=1):
+            ws.column_dimensions[chr(64 + index)].width = width
+
+        file_stream = BytesIO()
+        wb.save(file_stream)
+        file_stream.seek(0)
+
+        filename = f"reporte_actividades_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
+        return StreamingResponse(
+            file_stream,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+
+    except Exception as e:
+        print(f"❌ Error generando Excel de reportes: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+    

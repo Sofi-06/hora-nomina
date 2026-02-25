@@ -1,0 +1,386 @@
+:host {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+app-footer {
+  margin-top: auto;
+}
+
+.list-units-container {
+  padding: 30px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  margin: 20px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.units-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: nowrap;
+  gap: 20px;
+  width: 100%;
+}
+
+.btn-create {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #1f6feb;
+  background: #1f6feb;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-create:hover {
+  background: #1a56b3;
+  border-color: #1a56b3;
+}
+
+.units-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 250px;
+}
+
+.error-message {
+  background-color: #ffebee;
+  border-left: 4px solid #dc3545;
+  padding: 15px;
+  border-radius: 6px;
+  color: #c62828;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.error-message i {
+  font-size: 18px;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 16px;
+  color: #666;
+}
+
+.loading-spinner i {
+  margin-right: 10px;
+  font-size: 20px; 
+  color: #007bff;
+}
+
+.no-data {
+  text-align: center;
+  padding: 80px 20px;
+  color: #999;
+}
+
+.no-data i {
+  font-size: 56px;
+  margin-bottom: 20px;
+  display: block;
+  color: #ddd;
+}
+
+.no-data p {
+  font-size: 16px;
+  margin: 0;
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.units-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  background-color: white;
+}
+
+.units-table thead {
+  background-color: #34495e;
+  color: white;
+  font-weight: bold;
+}
+
+.units-table th {
+  padding: 12px;
+  text-align: left;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.unit-row {
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s ease;
+}
+
+.unit-row:hover {
+  background-color: #f8f9fa;
+}
+
+.units-table td {
+  padding: 12px;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cell-id {
+  color: #999;
+  font-weight: 600;
+  width: 60px;
+}
+
+.cell-name {
+  color: #2c3e50;
+  font-weight: 500;
+  min-width: 0;
+  max-width: 240px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.cell-codes,
+.cell-docentes {
+  color: #7f8c8d;
+  text-align: center;
+  font-weight: 600;
+  min-width: 80px;
+}
+
+.cell-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.btn-edit,
+.btn-delete {
+  background: none;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 500;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.btn-edit {
+  color: #1f6feb;
+  border-color: #1f6feb;
+  background-color: #eef3ff;
+}
+
+.btn-edit:hover {
+  background-color: #dbe8ff;
+  color: #1a56b3;
+}
+
+.btn-delete {
+  color: #dc3545;
+  border-color: #dc3545;
+  background-color: #fff5f7;
+}
+
+.btn-delete:hover {
+  background-color: #f8d7da;
+  color: #bd2130;
+}
+
+/* ===== MODAL STYLES ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+  backdrop-filter: blur(2px);
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  background-color: #f8f9fa;
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-header h3 i {
+  color: #1f6feb;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #999;
+  cursor: pointer;
+  transition: color 0.2s, transform 0.2s;
+  line-height: 1;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  color: #dc3545;
+  transform: rotate(90deg);
+}
+
+.modal-body {
+  padding: 20px;
+  min-height: 200px;
+}
+
+@keyframes fadeIn {
+  from { 
+    opacity: 0;
+  }
+  to { 
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+:host {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+app-footer {
+  margin-top: auto;
+}
+
+@media (max-width: 1200px) {
+  .units-header {
+    flex-direction: column;
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .units-title {
+    min-width: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .list-units-container {
+    padding: 20px;
+  }
+
+  .units-table {
+    font-size: 12px;
+  }
+
+  .units-table th,
+  .units-table td {
+    padding: 10px;
+  }
+
+  .cell-actions {
+    flex-direction: column;
+    min-width: auto;
+    gap: 5px;
+  }
+
+  .btn-edit,
+  .btn-delete {
+    width: 100%;
+    justify-content: center;
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .cell-name,
+  .cell-codes,
+  .cell-docentes {
+    min-width: auto;
+  }
+
+  /* Modal responsive */
+  .modal-content {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .modal-header h3 {
+    font-size: 1.25rem;
+  }
+}

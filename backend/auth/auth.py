@@ -20,8 +20,6 @@ class AuthResponse(BaseModel):
     mensaje: str
     usuario: dict = None
     
-import bcrypt
-
 def verificar_login(email: str, password: str):
     conexion = None
     try:
@@ -29,7 +27,7 @@ def verificar_login(email: str, password: str):
         cursor = conexion.cursor(dictionary=True)
 
         query = """
-            SELECT id, name, email, user_type as role, password
+            SELECT id, name, email, user_type as role, state, password
             FROM users
             WHERE email = %s
         """
@@ -42,17 +40,30 @@ def verificar_login(email: str, password: str):
             print("❌ Usuario no encontrado")
             return None
 
+        estado = usuario.get("state")
+        estado_normalizado = str(estado).strip().lower() if estado is not None else ""
+        esta_activo = estado in (1, True) or estado_normalizado in ("1", "activo")
+
+        if not esta_activo:
+            raise HTTPException(
+                status_code=403,
+                detail={"status": "error", "mensaje": "Usuario inactivo"}
+            )
+
         hash_bd = usuario["password"].encode("utf-8")
         password_ingresada = password.encode("utf-8")
 
         # 🔥 AQUÍ está la validación real
         if bcrypt.checkpw(password_ingresada, hash_bd):
-            print("✅ Password correcta")
             del usuario["password"]
+            usuario.pop("state", None)
             return usuario
         else:
             print("❌ Password incorrecta")
             return None
+
+    except HTTPException:
+        raise
 
     except Exception as e:
         print("ERROR LOGIN:", e)

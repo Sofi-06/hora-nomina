@@ -1,0 +1,71 @@
+<app-nav-component></app-nav-component>
+
+<div class="state-form-container" *ngIf="!loading; else loadingTpl">
+  <div class="card">
+    <div class="card-header">
+      Revisión de actividad para el docente <strong>{{ activity.user_name }}</strong> en el mes de <strong>{{
+        activity.month }}</strong>
+    </div>
+
+    <div class="form-grid">
+      <label>Docente</label>
+      <input type="text" [value]="activity.user_name" readonly>
+
+      <label>Código</label>
+      <input type="text" [value]="activity.code" readonly>
+
+      <label>Horas dedicadas</label>
+      <input type="text" [value]="activity.dedicated_hours" readonly>
+
+      <label>Descripción</label>
+      <textarea rows="4" [value]="activity.description" readonly></textarea>
+
+      <label>Documento</label>
+      <div class="doc-box">
+        <div *ngIf="activity.document_url; else noDoc" class="doc-content">
+          <span class="doc-name">{{ activity.document_name || activity.document_url }}</span>
+          <div class="doc-actions">
+            <button type="button" class="doc-btn" (click)="visualizar()" [disabled]="visualizing">
+              {{ visualizing ? 'Abriendo...' : 'Visualizar' }}
+            </button>
+            <button type="button" class="doc-btn" (click)="descargar(activity.id, activity.evidence_file)">Descargar</button>
+          </div>
+        </div>
+        <ng-template #noDoc>Sin documento</ng-template>
+      </div>
+
+      <hr class="full-row">
+
+      <label>Mes</label>
+      <input type="text" [value]="getMonthName(activity.month)" readonly>
+
+      <label>Fecha</label>
+      <input type="text" [value]="formatDateTime(activity.created_at)" readonly>
+
+      <label>Estado</label>
+      <select [(ngModel)]="activity.state" name="state">
+        <option value="" disabled>Seleccione estado</option>
+        <option *ngFor="let s of states" [value]="s">{{ s }}</option>
+      </select>
+
+      <label>Observaciones</label>
+      <textarea rows="4" [(ngModel)]="activity.observations" name="observations"
+        placeholder="Digite las observaciones (opcional)"></textarea>
+    </div>
+
+    <div class="actions">
+      <button class="btn-success" type="button" (click)="saveState()" [disabled]="saving || !activity.state">
+        {{ saving ? 'Guardando...' : 'Cambiar estado' }}
+      </button>
+      <button class="btn-danger" type="button" (click)="cancel()">Cancelar</button>
+    </div>
+
+    <p class="error" *ngIf="error">{{ error }}</p>
+  </div>
+</div>
+
+<ng-template #loadingTpl>
+  <p>Cargando actividad...</p>
+</ng-template>
+
+<app-footer></app-footer>
