@@ -12,10 +12,10 @@
 		<i class="fas fa-check-circle"></i> {{ successMessage }}
 	</div>
 
-	<form class="form-card" enctype="multipart/form-data">
+	<form class="form-card" enctype="multipart/form-data" (ngSubmit)="onSubmit()">
 		<div class="form-group">
 			<label for="unit">Unidad *</label>
-			<select id="unit" name="unit" [(ngModel)]="selectedUnit" [disabled]="isLoading" required>
+			<select id="unit" name="unit" [(ngModel)]="selectedUnit" [disabled]="isLoading" (change)="onUnitChange()" required>
 				<option [ngValue]="null" disabled>Seleccione la unidad a la que pertenece</option>
 				<option *ngFor="let unit of units" [ngValue]="unit.id">{{ unit.name }}</option>
 			</select>
@@ -23,7 +23,7 @@
 
 		<div class="form-group">
 			<label for="code">Código *</label>
-			<select id="code" name="code" [(ngModel)]="selectedCode" [disabled]="isLoading" required>
+			<select id="code" name="code" [(ngModel)]="selectedCode" [disabled]="isLoading" (change)="onCodeChange()" required>
 				<option [ngValue]="null" disabled>Seleccione un código</option>
 				<option *ngFor="let code of codes" [ngValue]="code.id">{{ code.code }} - {{ code.name }}</option>
 			</select>
@@ -61,6 +61,9 @@
 				</button>
 				<p class="file-info" *ngIf="selectedFile">
 					<i class="fas fa-file"></i> {{ selectedFile.name }}
+				</p>
+				<p class="file-info" *ngIf="!selectedFile && evidenceFileName">
+					<i class="fas fa-file"></i> {{ evidenceFileName }}
 				</p>
 			</div>
 			<p class="file-formats">Formatos aceptados: .doc .docx .xml .pdf .xlsx .zip .rar</p>

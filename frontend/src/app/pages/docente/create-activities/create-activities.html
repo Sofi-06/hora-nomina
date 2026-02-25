@@ -14,17 +14,18 @@
   </div>
 
   <form (ngSubmit)="onSubmit()" class="form-card" enctype="multipart/form-data">
+
     <div class="form-group">
       <label for="unit">Unidad *</label>
       <select
         id="unit"
         name="unit"
         [(ngModel)]="selectedUnit"
-        [disabled]="isLoading"
+        [disabled]="isLoading || units.length === 0"
         (change)="onUnitChange()"
         required
       >
-        <option [ngValue]="null" disabled>Seleccione la unidad a la que pertenece</option>
+        <option [ngValue]="null" disabled>{{ units.length === 0 ? 'No existen unidades' : 'Seleccione la unidad' }}</option>
         <option *ngFor="let unit of units" [ngValue]="unit.id">
           {{ unit.name }}
         </option>
@@ -37,11 +38,11 @@
         id="code"
         name="code"
         [(ngModel)]="selectedCode"
-        [disabled]="isLoading"
+        [disabled]="isLoading || !selectedUnit || codes.length === 0"
         (change)="onCodeChange()"
         required
       >
-        <option [ngValue]="null" disabled>Seleccione un código</option>
+        <option [ngValue]="null" disabled>{{ codes.length === 0 ? 'Seleccione primero una unidad' : 'Seleccione un código' }}</option>
         <option *ngFor="let code of codes" [ngValue]="code.id">
           {{ code.code }} - {{ code.name }}
         </option>
@@ -54,15 +55,16 @@
         id="activityType"
         name="activityType"
         [(ngModel)]="selectedActivityType"
-        [disabled]="isLoading || activityTypes.length === 0"
+        [disabled]="isLoading || !selectedCode || activityTypes.length === 0"
         required
       >
-        <option [ngValue]="null" disabled>{{ activityTypes.length === 0 ? 'No existen registros' : 'Seleccione un tipo de actividad' }}</option>
+        <option [ngValue]="null" disabled>{{ activityTypes.length === 0 ? 'Seleccione primero un código' : 'Seleccione un tipo de actividad' }}</option>
         <option *ngFor="let type of activityTypes" [ngValue]="type.id">
           {{ type.name }}
         </option>
       </select>
     </div>
+
 
     <div class="form-group">
       <label for="month">Mes *</label>
@@ -138,7 +140,7 @@
         {{ isLoading ? 'Creando...' : 'Crear' }}
       </button>
     </div>
+
   </form>
 </div>
-
 <app-footer></app-footer>

@@ -1825,6 +1825,23 @@ def get_activity_by_id(activity_id: int):
         row = cur.fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Actividad no encontrada")
+        # Calcular el mes como un mes antes de created_at
+        created_at = row.get('created_at')
+        if created_at:
+            from datetime import datetime
+            if isinstance(created_at, str):
+                dt = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S") if len(created_at) > 10 else datetime.strptime(created_at, "%Y-%m-%d")
+            else:
+                dt = created_at
+            prev_month = dt.month - 1
+            year = dt.year
+            if prev_month == 0:
+                prev_month = 12
+                year -= 1
+            meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+            row['month'] = f"{meses[prev_month-1]} {year}"
+        else:
+            row['month'] = None
         return row
     finally:
         cur.close()

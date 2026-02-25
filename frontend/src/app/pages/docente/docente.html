@@ -93,8 +93,19 @@
                 <button class="btn-delete btn-activity" type="button" title="Eliminar" (click)="eliminar(a.id)">
                   <i class="fas fa-trash-alt"></i>
                 </button>
+                <button *ngIf="a.observations" class="btn-observation btn-activity" type="button" title="Ver observación" (click)="showObservation(a)">
+                  <i class="fas fa-bell"></i>
+                </button>
               </td>
             </tr>
+          <!-- Modal global de observación -->
+          <div class="modal-overlay" *ngIf="modalObservationVisible">
+            <div class="modal-box">
+              <h3><i class="fas fa-bell"></i> Observación del administrador</h3>
+              <p>{{ modalObservationText }}</p>
+              <button class="btn-close" type="button" (click)="closeObservationModal()">Cerrar</button>
+            </div>
+          </div>
           </tbody>
         </table>
       </div>

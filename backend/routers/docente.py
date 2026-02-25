@@ -63,31 +63,33 @@ def get_docente_activities(
             a.evidence_file,
             u.name AS user_name,
             d.name AS department,
-            GROUP_CONCAT(DISTINCT un.name ORDER BY un.name SEPARATOR ', ') AS unit,
+            un.name AS unit,
             CONCAT(c.code, ' - ', c.name) AS code,
             a.state,
             a.description,
             a.created_at,
-            a.updated_at
+            a.updated_at,
+            a.observations
         FROM activities a
         LEFT JOIN users u ON u.id = a.user_id
         LEFT JOIN departments d ON d.id = u.department_id
         LEFT JOIN types t ON t.id = a.type_id
         LEFT JOIN codes c ON c.id = t.code_id
-        LEFT JOIN unit_user uu ON uu.user_id = u.id
-        LEFT JOIN units un ON un.id = uu.unit_id
+        LEFT JOIN units un ON un.id = c.unit_id
         WHERE a.user_id = %s
         GROUP BY
             a.id,
             a.evidence_file,
             u.name,
             d.name,
+            un.name,
             c.code,
             c.name,
             a.state,
             a.description,
             a.created_at,
-            a.updated_at
+            a.updated_at,
+            a.observations
         ORDER BY a.created_at DESC
         """
         
@@ -119,6 +121,7 @@ async def create_docente_activity(
     evidence_file: UploadFile = File(...)
 ):
     """Crea una nueva actividad para un docente"""
+
     try:
         # Validar entrada
         if not user_id or not type_id or dedicated_hours is None or not description:
@@ -126,48 +129,46 @@ async def create_docente_activity(
                 "status": "error",
                 "message": "Campos requeridos faltantes"
             }
+
         if dedicated_hours < 0 or dedicated_hours > 40:
             return {
                 "status": "error",
                 "message": "Las horas deben estar entre 0 y 40"
             }
+
         # Validar formato de archivo
         allowed_extensions = {'doc', 'docx', 'xml', 'pdf', 'xlsx', 'zip', 'rar'}
         file_extension = evidence_file.filename.split('.')[-1].lower()
+        
         if file_extension not in allowed_extensions:
             return {
                 "status": "error",
                 "message": f"Formato de archivo no permitido. Permitidos: {', '.join(allowed_extensions)}"
             }
+
         conexion = get_database_connection()
+
         if not conexion:
             return {
                 "status": "error",
                 "message": "No se pudo conectar a la base de datos"
             }
+
         # Crear directorio para el usuario si no existe
         user_upload_dir = os.path.join(UPLOAD_DIR, str(user_id))
         os.makedirs(user_upload_dir, exist_ok=True)
+
         # Guardar archivo
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_")
         filename = timestamp + evidence_file.filename
         filepath = os.path.join(user_upload_dir, filename)
+
         with open(filepath, "wb") as f:
             content = await evidence_file.read()
             f.write(content)
+
         cursor = conexion.cursor()
-        # Calcular mes anterior
-        month_names = [
-            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-        ]
-        now = datetime.now()
-        prev_month = now.month - 1
-        year = now.year
-        if prev_month < 1:
-            prev_month = 12
-            year -= 1
-        month_text = f"{month_names[prev_month-1]} {year}"
+
         # Insertar actividad en la base de datos
         insert_query = """
         INSERT INTO activities (
@@ -176,24 +177,25 @@ async def create_docente_activity(
             hours,
             evidence_file,
             description,
-            month,
             state,
             created_at,
             updated_at
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+        ) VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
         """
+
         cursor.execute(insert_query, (
             user_id,
             type_id,
             dedicated_hours,
             filename,
             description,
-            month_text,
-            "Pendiente"  # Estado inicial
+            "Revisión"  # Estado inicial
         ))
+
         conexion.commit()
         cursor.close()
         conexion.close()
+
         return {
             "status": "success",
             "message": "Actividad creada correctamente"
@@ -210,6 +212,7 @@ async def update_docente_activity(
     activity_id: int,
     user_id: int = Form(...),
     type_id: int = Form(...),
+    unit_id: int = Form(...),
     dedicated_hours: int = Form(...),
     description: str = Form(...),
     evidence_file: UploadFile = File(None)
@@ -261,6 +264,7 @@ async def update_docente_activity(
             hours = %s,
             evidence_file = %s,
             description = %s,
+            state = 'Reenviado',
             updated_at = NOW()
         WHERE id = %s
         """
@@ -272,6 +276,8 @@ async def update_docente_activity(
             description,
             activity_id
         ))
+        # Actualizar unidad en tabla unit_user
+        cursor.execute("UPDATE unit_user SET unit_id = %s WHERE user_id = %s", (unit_id, user_id))
         conexion.commit()
         cursor.close()
         conexion.close()
@@ -304,6 +310,7 @@ def get_docente_codes():
                 c.id,
                 c.code,
                 c.name,
+                c.unit_id,
                 u.name AS unit,
                 COUNT(DISTINCT t.id) AS types,
                 GROUP_CONCAT(DISTINCT t.name ORDER BY t.name SEPARATOR ', ') AS type_names
@@ -434,7 +441,15 @@ def get_docente_activity_by_id(activity_id: int):
                 "message": "No se pudo conectar a la base de datos"
             }
         cursor = conexion.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM activities WHERE id = %s", (activity_id,))
+        # Traer la actividad y sus relaciones (tipo, código, unidad)
+        cursor.execute('''
+            SELECT a.*, t.name AS type_name, t.code_id, c.code AS code_value, c.name AS code_name, c.unit_id, u.name AS unit_name
+            FROM activities a
+            LEFT JOIN types t ON t.id = a.type_id
+            LEFT JOIN codes c ON c.id = t.code_id
+            LEFT JOIN units u ON u.id = c.unit_id
+            WHERE a.id = %s
+        ''', (activity_id,))
         actividad = cursor.fetchone()
         if not actividad:
             cursor.close()
@@ -443,27 +458,23 @@ def get_docente_activity_by_id(activity_id: int):
                 "status": "error",
                 "message": "Actividad no encontrada"
             }
-        # Traer nombre de tipo
-        cursor.execute("SELECT name FROM types WHERE id = %s", (actividad['type_id'],))
-        tipo = cursor.fetchone()
-        actividad['type_name'] = tipo['name'] if tipo else None
-        # Traer código
-        cursor.execute("SELECT code_id FROM types WHERE id = %s", (actividad['type_id'],))
-        tipo_code = cursor.fetchone()
-        code_id = tipo_code['code_id'] if tipo_code else None
-        actividad['code_id'] = code_id
-        cursor.execute("SELECT code, name FROM codes WHERE id = %s", (code_id,))
-        code = cursor.fetchone()
-        actividad['code_value'] = code['code'] if code else None
-        actividad['code_name'] = code['name'] if code else None
-        # Traer unidad
-        cursor.execute("SELECT unit_id FROM unit_user WHERE user_id = %s LIMIT 1", (actividad['user_id'],))
-        unit_row = cursor.fetchone()
-        unit_id = unit_row['unit_id'] if unit_row else None
-        actividad['unit_id'] = unit_id
-        cursor.execute("SELECT name FROM units WHERE id = %s", (unit_id,))
-        unit = cursor.fetchone()
-        actividad['unit_name'] = unit['name'] if unit else None
+        # Calcular el mes como un mes antes de created_at
+        created_at = actividad.get('created_at')
+        if created_at:
+            if isinstance(created_at, str):
+                dt = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S")
+            else:
+                dt = created_at
+            # Restar un mes
+            prev_month = dt.month - 1
+            year = dt.year
+            if prev_month == 0:
+                prev_month = 12
+                year -= 1
+            meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+            actividad['month'] = f"{meses[prev_month-1]} {year}"
+        else:
+            actividad['month'] = None
         # Construir URL de evidencia
         evidencia_url = None
         if actividad['evidence_file']:

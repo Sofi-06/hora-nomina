@@ -18,6 +18,7 @@ interface ActivityItem {
   created_at: string;
   updated_at: string;
   evidence_file: string;
+  observations?: string | null;
 }
 
 @Component({
@@ -81,6 +82,24 @@ export class Docente implements OnInit {
       .join(', ');
   }
 
+
+  // Modal de observación
+  modalObservationVisible = false;
+  modalObservationText = '';
+
+  showObservation(activity: ActivityItem): void {
+    this.modalObservationText = activity.observations || '';
+    this.modalObservationVisible = true;
+    this.cd.detectChanges();
+  }
+
+  closeObservationModal(): void {
+    this.modalObservationVisible = false;
+    this.modalObservationText = '';
+    this.cd.detectChanges();
+  }
+
+
   loadActivities(): void {
     this.loading = true;
     this.error = '';
@@ -109,7 +128,8 @@ export class Docente implements OnInit {
               month: item?.month ? item.month : '-',
               created_at: item?.created_at ?? '',
               updated_at: item?.updated_at ?? '',
-              evidence_file: item?.evidence_file ?? item?.document_name ?? item?.document_url ?? ''
+              evidence_file: item?.evidence_file ?? item?.document_name ?? item?.document_url ?? '',
+              observations: item?.observations ?? null
             }));
 
             console.log('Actividades del docente cargadas:', this.activities);
@@ -241,11 +261,9 @@ export class Docente implements OnInit {
   }
 
   eliminar(id: number): void {
-    // Lógica para eliminar actividad
-    // Por ejemplo, mostrar confirmación y luego eliminar
+
     if (confirm('¿Seguro que deseas eliminar esta actividad?')) {
-      // Aquí puedes llamar al backend para eliminar
-      // Ejemplo:
+
       this.http.delete(`${this.apiUrl}/docente/activities/${id}`).subscribe({
         next: () => {
           this.activities = this.activities.filter(a => a.id !== id);

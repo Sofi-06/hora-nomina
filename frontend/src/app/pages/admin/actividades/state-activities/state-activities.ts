@@ -65,8 +65,8 @@ export class StateActivities implements OnInit {
       next: (res) => {
         const data = res?.data ?? res;
 this.activity = {
-  id: data?.id ?? 0,                          // <-- faltaba
-  evidence_file: data?.evidence_file ?? '',   // <-- faltaba
+  id: data?.id ?? 0,                          
+  evidence_file: data?.evidence_file ?? '',  
   user_name: data?.user_name ?? '',
   code: data?.code ?? '',
   dedicated_hours: data?.dedicated_hours ?? '',

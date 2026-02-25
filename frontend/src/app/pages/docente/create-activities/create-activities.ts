@@ -37,9 +37,9 @@ export class CreateActivities implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  selectedUnit: number | null = null;
-  selectedCode: number | null = null;
   selectedActivityType: number | null = null;
+  selectedCode: number | null = null;
+  selectedUnit: number | null = null;
   dedicatedHours: number | null = null;
   description = '';
   selectedFile: File | null = null;
@@ -61,9 +61,79 @@ export class CreateActivities implements OnInit {
 
   ngOnInit(): void {
     this.setCurrentMonth();
-    this.loadInitialData();
+    this.loadUnits();
     const usuario = this.auth.getUsuarioActual();
     this.userId = usuario?.id || null;
+  }
+
+  onUnitChange(): void {
+    this.selectedCode = null;
+    this.selectedActivityType = null;
+    this.loadCodesByUnit();
+  }
+
+  private loadUnits(): void {
+    this.http.get<{ status: string; data: Unit[] }>(`${this.apiUrl}/units`).subscribe({
+      next: (response) => {
+        if (response.status === 'success' && Array.isArray(response.data)) {
+          this.units = response.data;
+        } else {
+          this.units = [];
+        }
+        this.cd.detectChanges();
+      },
+      error: () => {
+        this.units = [];
+        this.cd.detectChanges();
+      },
+    });
+  }
+
+  private loadCodesByUnit(): void {
+    if (!this.selectedUnit) {
+      this.codes = [];
+      return;
+    }
+    this.http.get<{ status: string; data: Code[] }>(`${this.apiUrl}/docente/codes`).subscribe({
+      next: (response) => {
+        if (response.status === 'success' && Array.isArray(response.data)) {
+          this.codes = response.data.filter(code => code.unit_id === this.selectedUnit);
+        } else {
+          this.codes = [];
+        }
+        this.cd.detectChanges();
+      },
+      error: () => {
+        this.codes = [];
+        this.cd.detectChanges();
+      },
+    });
+  }
+
+  onCodeChange(): void {
+    this.selectedActivityType = null;
+    this.loadTypesByCode();
+  }
+
+  private loadTypesByCode(): void {
+    if (!this.selectedCode) {
+      this.activityTypes = [];
+      return;
+    }
+    this.http.get<{ status: string; data: ActivityType[] }>(`${this.apiUrl}/docente/types`).subscribe({
+      next: (response) => {
+        if (response.status === 'success' && Array.isArray(response.data)) {
+          this.activityTypes = response.data.filter(type => type.code_id === this.selectedCode);
+        } else {
+          this.activityTypes = [];
+        }
+        this.cd.detectChanges();
+      },
+      error: () => {
+        this.activityTypes = [];
+        this.cd.detectChanges();
+      },
+    });
   }
 
   private setCurrentMonth(): void {
@@ -81,27 +151,9 @@ export class CreateActivities implements OnInit {
     this.currentMonth = monthNames[prevMonth] + ' ' + year;
   }
 
-  private loadInitialData(): void {
-    this.loadUnits();
-    this.loadActivityTypes();
-  }
 
-  private loadUnits(): void {
-    this.http.get<{ status: string; data: Unit[] }>(`${this.apiUrl}/units`).subscribe({
-      next: (response) => {
-        if (response.status === 'success' && response.data) {
-          this.units = response.data;
-        } else {
-          this.errorMessage = 'No se pudieron cargar las unidades';
-        }
-        this.cd.detectChanges();
-      },
-      error: () => {
-        this.errorMessage = 'Error al cargar las unidades';
-        this.cd.detectChanges();
-      },
-    });
-  }
+
+
 
   private loadActivityTypes(): void {
     this.http.get<{ status: string; data: ActivityType[] }>(`${this.apiUrl}/docente/types`).subscribe({
@@ -121,52 +173,7 @@ export class CreateActivities implements OnInit {
     });
   }
 
-  onUnitChange(): void {
-    this.selectedCode = null;
-    this.selectedActivityType = null;
-    this.loadCodesByUnit();
-  }
 
-  private loadCodesByUnit(): void {
-    this.http.get<{ status: string; data: Code[] }>(`${this.apiUrl}/docente/codes`).subscribe({
-      next: (response) => {
-        if (response.status === 'success' && Array.isArray(response.data)) {
-          this.codes = response.data;
-        } else {
-          this.codes = [];
-        }
-        this.cd.detectChanges();
-      },
-      error: () => {
-        this.codes = [];
-        this.errorMessage = 'Error al cargar los códigos';
-        this.cd.detectChanges();
-      },
-    });
-  }
-
-  onCodeChange(): void {
-    this.selectedActivityType = null;
-    this.loadTypesByCode();
-  }
-
-  private loadTypesByCode(): void {
-    this.http.get<{ status: string; data: ActivityType[] }>(`${this.apiUrl}/docente/types`).subscribe({
-      next: (response) => {
-        if (response.status === 'success' && Array.isArray(response.data)) {
-          this.activityTypes = response.data;
-        } else {
-          this.activityTypes = [];
-        }
-        this.cd.detectChanges();
-      },
-      error: () => {
-        this.activityTypes = [];
-        this.errorMessage = 'Error al cargar los tipos de actividad';
-        this.cd.detectChanges();
-      },
-    });
-  }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -197,9 +204,9 @@ export class CreateActivities implements OnInit {
 
   isFormValid(): boolean {
     return (
-      this.selectedUnit !== null &&
-      this.selectedCode !== null &&
       this.selectedActivityType !== null &&
+      this.selectedCode !== null &&
+      this.selectedUnit !== null &&
       this.dedicatedHours !== null &&
       this.dedicatedHours >= 0 &&
       this.dedicatedHours <= 40 &&
