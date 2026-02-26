@@ -7,22 +7,28 @@
 
     <div class="modal-body">
       <p class="modal-question">¿Cuántos días desea ampliar el plazo?</p>
-      
+      <div class="countdown-info">
+        <strong>Tiempo restante:</strong> {{ countdown }}
+      </div>
       <div class="input-group">
         <label for="days-input">Días</label>
         <input 
           id="days-input"
           type="number" 
           [(ngModel)]="days" 
-          min="1" 
+          min="0" 
           max="365"
           placeholder="Ingrese número de días"
           class="days-input"
+      
         />
       </div>
     </div>
 
     <div class="modal-footer">
+      <button type="button" class="btn-reset" (click)="resetToDefault()">
+        <i class="fas fa-undo"></i> Volver a los 10 primeros días
+      </button>
       <button type="button" class="btn-cancel" (click)="close()">
         Cancelar
       </button>

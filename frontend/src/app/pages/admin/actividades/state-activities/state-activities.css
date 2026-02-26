@@ -94,6 +94,13 @@ app-footer {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 320px;
+  display: inline-block;
+}
+
+.doc-content {
+  /* Asegura que el nombre del archivo no empuje los botones fuera de la tarjeta */
+  min-width: 0;
 }
 
 .doc-actions {

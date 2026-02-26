@@ -1,0 +1,60 @@
+<div class="login-container">
+	<!-- Sección izquierda con imagen -->
+	<div class="image-section">
+		<div class="image-content">
+				<div class="logo">
+			</div>
+		</div>
+	</div>
+
+	<!-- Sección derecha con formulario -->
+	<div class="form-section">
+		<div class="form-content">
+			<div class="logo-container">
+				<img src="assets/Copia-de-FInal-Logo-campusprueba2-2-1-scaled.png" alt="Campus Logo" class="logo-img">
+			</div>
+      
+			<h1>Recuperar contraseña</h1>
+
+			<form class="login-form" (ngSubmit)="onSubmit()">
+				<div class="form-group">
+					<label for="email">Correo institucional</label>
+					<div class="input-container">
+						<input 
+							type="email" 
+							id="email" 
+							name="email"
+							[(ngModel)]="email"
+							placeholder="usuario@usantotomas.edu.co" 
+							required>
+					</div>
+				</div>
+
+				<button 
+					type="submit" 
+					class="btn-login" 
+					[disabled]="isLoading"
+					[class.loading]="isLoading">
+					<span *ngIf="!isLoading">Enviar enlace</span>
+					<span *ngIf="isLoading" class="loading-content">
+						<span class="spinner"></span>
+						Enviando...
+					</span>
+				</button>
+
+				<div *ngIf="successMessage" class="success-message">
+					{{ successMessage }}
+				</div>
+				<div *ngIf="errorMessage" class="error-message">
+					{{ errorMessage }}
+				</div>
+				<div class="forgot-password">
+					<a routerLink="/login">Volver a iniciar sesión</a>
+				</div>
+			</form>
+			<div class="info-message">
+				<span>Recibirás un enlace en tu correo para restablecer tu contraseña.</span>
+			</div>
+		</div>
+	</div>
+</div>

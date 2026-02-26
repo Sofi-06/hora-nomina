@@ -119,8 +119,9 @@
 </div>
 
 <app-extend-date 
-  [isOpen]="showExtendModal" 
-  (closeModal)="closeExtendModal()">
+    [isOpen]="showExtendModal" 
+    [deadline]="deadline"
+    (closeModal)="closeExtendModal()">
 </app-extend-date>
 
 <app-footer></app-footer>

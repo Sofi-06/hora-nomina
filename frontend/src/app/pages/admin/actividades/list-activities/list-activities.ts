@@ -43,6 +43,7 @@ export class ListActivities implements OnInit {
   currentPage = 1;
 
   showExtendModal = false;
+  deadline: Date = new Date(new Date().getFullYear(), new Date().getMonth(), 10, 23, 59, 59);
 
   usuario: Usuario | null = null;
   role: string = '';
@@ -146,7 +147,15 @@ export class ListActivities implements OnInit {
   }
 
 
+
   openExtendModal(): void {
+    // Cargar deadline extendido si existe
+    const stored = localStorage.getItem('extendedDeadline');
+    if (stored) {
+      this.deadline = new Date(stored);
+    } else {
+      this.deadline = new Date(new Date().getFullYear(), new Date().getMonth(), 10, 23, 59, 59);
+    }
     this.showExtendModal = true;
   }
 
@@ -241,7 +250,7 @@ export class ListActivities implements OnInit {
   formatMonthYear(value?: string | Date | null): string {
     if (!value) return '-';
     const d = new Date(value);
-    if (isNaN(d.getTime())) return '-';
+    if (Number.isNaN(d.getTime())) return '-';
     return new Intl.DateTimeFormat('es-ES', {
       month: 'long',
       year: 'numeric',
@@ -251,7 +260,7 @@ export class ListActivities implements OnInit {
   formatRelativeUpdate(value?: string | Date | null): string {
     if (!value) return '-';
     const d = new Date(value);
-    if (isNaN(d.getTime())) return '-';
+    if (Number.isNaN(d.getTime())) return '-';
 
     const diffMs = Date.now() - d.getTime();
     const min = Math.floor(diffMs / 60000);

@@ -20,6 +20,8 @@ import { Reportes } from './pages/reportes/reportes';
 import { PreviewReports } from './pages/reportes/preview-reports/preview-reports';
 import { CreateActivities } from './pages/docente/create-activities/create-activities';
 import { EditActivities } from './pages/docente/edit-activities/edit-activities';
+import { Email } from './pages/email/email';
+import { ConfirmPassword } from './pages/confirm-password/confirm-password';
 
 export const routes: Routes = [
   {
@@ -130,5 +132,13 @@ export const routes: Routes = [
     path: 'director',
     component: Director,
     canActivate: [AuthGuard]
+  }, 
+      {
+    path: 'email',
+    component: Email
+  }, 
+        {
+    path: 'confirmPassword',
+    component: ConfirmPassword
   }, 
 ];

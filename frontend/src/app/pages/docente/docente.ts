@@ -54,31 +54,45 @@ export class Docente implements OnInit {
   private readonly apiUrl = 'http://localhost:8000';
 
   constructor(
-    private auth: Auth,
-    private http: HttpClient,
-    private cd: ChangeDetectorRef,
-    private router: Router
+    private readonly auth: Auth,
+    private readonly http: HttpClient,
+    private readonly cd: ChangeDetectorRef,
+    private readonly router: Router
   ) {}
 
   ngOnInit() {
-    // Bloqueo de creación después de los primeros 10 días de cada mes
-    this.creationBlocked = this.isCreationBlockedByDate();
+    this.creationBlocked = this.isCreationBlockedByDeadline();
     setInterval(() => {
-      const blocked = this.isCreationBlockedByDate();
+      const blocked = this.isCreationBlockedByDeadline();
       if (blocked !== this.creationBlocked) {
         this.creationBlocked = blocked;
         this.cd.detectChanges();
       }
-    }, 60000); // Revisa cada minuto
+    }, 60000);
     const usuario = this.auth.getUsuarioActual();
     this.nombreUsuario = usuario?.name || 'Docente';
     this.setCurrentDate();
     this.loadActivities();
   }
 
-  isCreationBlockedByDate(): boolean {
+  isCreationBlockedByDeadline(): boolean {
+    // Usa deadline extendido si existe y resetea si cambia el mes
     const now = new Date();
-    return now.getDate() > 10;
+    let deadline: Date;
+    const stored = localStorage.getItem('extendedDeadline');
+    if (stored) {
+      const storedDate = new Date(stored);
+      if (storedDate.getMonth() !== now.getMonth() || storedDate.getFullYear() !== now.getFullYear()) {
+        // Resetear deadline
+        deadline = new Date(now.getFullYear(), now.getMonth(), 10, 23, 59, 59);
+        localStorage.setItem('extendedDeadline', deadline.toISOString());
+      } else {
+        deadline = storedDate;
+      }
+    } else {
+      deadline = new Date(now.getFullYear(), now.getMonth(), 10, 23, 59, 59);
+    }
+    return now > deadline;
   }
 
   private setCurrentDate(): void {
