@@ -1,5 +1,5 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { HttpClient} from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, throwError, timeout, catchError, TimeoutError } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
@@ -23,7 +23,7 @@ export interface LoginResponse {
 export class Auth {
   private apiUrl = 'http://localhost:8000';
   private usuarioActual = new BehaviorSubject<Usuario | null>(null);
- 
+
 
   public usuario$ = this.usuarioActual.asObservable();
 
@@ -116,25 +116,25 @@ export class Auth {
     this.router.navigate(['/login']);
   }
 
-isAuthenticated(): boolean {
-  if (this.usuarioActual.value) {
-    return true;
-  }
+  isAuthenticated(): boolean {
+    if (this.usuarioActual.value) {
+      return true;
+    }
 
-  if (isPlatformBrowser(this.platformId)) {
-    const usuarioGuardado = localStorage.getItem('usuario');
-    if (usuarioGuardado) {
-      try {
-        this.usuarioActual.next(JSON.parse(usuarioGuardado));
-        return true;
-      } catch {
-        localStorage.removeItem('usuario');
+    if (isPlatformBrowser(this.platformId)) {
+      const usuarioGuardado = localStorage.getItem('usuario');
+      if (usuarioGuardado) {
+        try {
+          this.usuarioActual.next(JSON.parse(usuarioGuardado));
+          return true;
+        } catch {
+          localStorage.removeItem('usuario');
+        }
       }
     }
-  }
 
-  return false;
-}
+    return false;
+  }
 
 
   getDashboardMetrics(): Observable<any> {
@@ -168,24 +168,6 @@ isAuthenticated(): boolean {
 
   cargarUsuarioDesdeStorage(): void {
 
-  if (isPlatformBrowser(this.platformId)) {
-
-    const usuarioGuardado = localStorage.getItem('usuario');
-
-    if (usuarioGuardado) {
-
-      this.usuarioActual.next(JSON.parse(usuarioGuardado));
-
-    }
-
-  }
-
-}
-
-initAuth(): Promise<void> {
-
-  return new Promise((resolve) => {
-
     if (isPlatformBrowser(this.platformId)) {
 
       const usuarioGuardado = localStorage.getItem('usuario');
@@ -198,12 +180,67 @@ initAuth(): Promise<void> {
 
     }
 
-    resolve();
+  }
 
-  });
+  initAuth(): Promise<void> {
 
-}
+    return new Promise((resolve) => {
 
+      if (isPlatformBrowser(this.platformId)) {
+
+        const usuarioGuardado = localStorage.getItem('usuario');
+
+        if (usuarioGuardado) {
+
+          this.usuarioActual.next(JSON.parse(usuarioGuardado));
+
+        }
+
+      }
+
+      resolve();
+
+    });
+
+  }
+
+  // ===============================
+  // RECUPERAR CONTRASEÑA
+  // ===============================
+
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/auth/forgot-password`, { email }).pipe(
+      timeout(15000), // 15 segundos porque el envío de correo puede tardar
+      catchError((error: any) => {
+        console.error('Error en forgot-password:', error);
+        if (error instanceof TimeoutError) {
+          return throwError(() => ({
+            status: 0,
+            message: 'El servidor tardó demasiado. Intenta de nuevo.',
+            error: 'timeout',
+          }));
+        }
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  resetPassword(token: string, password: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/auth/reset-password`, { token, password }).pipe(
+      timeout(10000),
+      catchError((error: any) => {
+        console.error('Error en reset-password:', error);
+        if (error instanceof TimeoutError) {
+          return throwError(() => ({
+            status: 0,
+            message: 'El servidor tardó demasiado. Intenta de nuevo.',
+            error: 'timeout',
+          }));
+        }
+        return throwError(() => error);
+      }),
+    );
+  }
 
 
 }

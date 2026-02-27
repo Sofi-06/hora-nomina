@@ -96,7 +96,7 @@ export class ExtendDate implements OnInit, OnDestroy {
     this.close();
   }
 
-    resetToDefault(): void {
+  resetToDefault(): void {
     // Restablece el plazo a los primeros 10 días del mes actual
     this.days = 0;
     this.deadline = new Date(new Date().getFullYear(), new Date().getMonth(), 10, 23, 59, 59);
