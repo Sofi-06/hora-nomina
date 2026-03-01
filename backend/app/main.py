@@ -22,6 +22,7 @@ from auth.auth import router as auth_router
 from routers.docente import router as docente_router
 from routers.director import router as director_router
 from baseDatos.database import get_database_connection
+from app.services.correosSMTP.correo import enviar_correo_cambio_estado
 
 load_dotenv()
 
@@ -1851,8 +1852,19 @@ def get_activity_by_id(activity_id: int):
 @app.put("/admin/activities/{activity_id}/state")
 def update_activity_state(activity_id: int, payload: UpdateActivityStatePayload):
     conn = get_database_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(dictionary=True)
     try:
+        # Obtener información del usuario y la actividad para el correo
+        cur.execute("""
+            SELECT u.name, u.email, t.name as activity_name
+            FROM activities a
+            JOIN users u ON u.id = a.user_id
+            JOIN types t ON t.id = a.type_id
+            WHERE a.id = %s
+        """, (activity_id,))
+        info = cur.fetchone()
+
+        # Actualizar el estado
         cur.execute("""
             UPDATE activities
             SET state = %s,
@@ -1864,6 +1876,19 @@ def update_activity_state(activity_id: int, payload: UpdateActivityStatePayload)
 
         if cur.rowcount == 0:
             raise HTTPException(status_code=404, detail="Actividad no encontrada")
+
+        # Enviar el correo si se encontró la información
+        if info:
+            try:
+                enviar_correo_cambio_estado(
+                    destinatario=info['email'],
+                    nombre_usuario=info['name'],
+                    actividad_nombre=info['activity_name'],
+                    nuevo_estado=payload.state,
+                    observaciones=payload.observations
+                )
+            except Exception as e_mail:
+                print(f"⚠️ Error al enviar correo de cambio de estado: {e_mail}")
 
         return {"message": "Estado actualizado correctamente"}
     finally:
