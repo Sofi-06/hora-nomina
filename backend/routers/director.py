@@ -24,13 +24,18 @@ def get_director_dashboard_metrics(user_id: int = Query(..., description="ID del
 @router.get("/activities")
 def get_activities_by_role(
     user_id: int = Query(..., description="ID del usuario"),
-    role: str = Query(..., description="Rol del usuario: admin, director, docente")
+    role: str = Query(..., description="Rol del usuario: admin, director, docente"),
+    fecha_inicio: str = Query(None, description="Fecha inicio filtro"),
+    fecha_final: str = Query(None, description="Fecha final filtro"),
+    estado: str = Query(None, description="Estado filtro"),
+    unidad: str = Query(None, description="Unidad filtro"),
+    departamento: str = Query(None, description="Departamento filtro")
 ):
     try:
         if role == "admin":
-            return DirectorRepository.obtener_todas_actividades()
+            return DirectorRepository.obtener_todas_actividades(fecha_inicio, fecha_final, estado, unidad, departamento)
         elif role == "director":
-            return DirectorRepository.obtener_actividades_director(user_id)
+            return DirectorRepository.obtener_actividades_director(user_id, fecha_inicio, fecha_final, estado, unidad, departamento)
         elif role == "docente":
             return DocenteRepository.obtener_actividades_docente(user_id)
         else:
@@ -44,11 +49,12 @@ def download_director_reports_excel(
     fecha_inicio: str = None,
     fecha_final: str = None,
     estado: str = None,
-    unidad: str = None
+    unidad: str = None,
+    departamento: str = None
 ):
     """Descarga un Excel de actividades solo de las unidades del director"""
     try:
-        actividades = DirectorRepository.obtener_actividades_director_para_reporte(user_id, fecha_inicio, fecha_final, estado, unidad)
+        actividades = DirectorRepository.obtener_actividades_director_para_reporte(user_id, fecha_inicio, fecha_final, estado, unidad, departamento)
 
         wb = Workbook()
         ws = wb.active
@@ -56,6 +62,7 @@ def download_director_reports_excel(
 
         headers = [
             "Usuario",
+            "Departamento",
             "Unidad",
             "Actividad",
             "Descripción",
@@ -88,6 +95,7 @@ def download_director_reports_excel(
 
             ws.append([
                 item.get("user_name") or "-",
+                item.get("department") or "-",
                 item.get("unit") or "-",
                 item.get("code") or "-",
                 item.get("description") or "-",
@@ -96,7 +104,7 @@ def download_director_reports_excel(
                 item.get("state") or "-"
             ])
 
-        for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=1, max_col=7):
+        for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=1, max_col=8):
             for cell in row:
                 cell.border = cell_border
                 cell.alignment = Alignment(vertical="top", wrap_text=True)
@@ -104,7 +112,7 @@ def download_director_reports_excel(
         ws.freeze_panes = "A2"
         ws.auto_filter.ref = None
 
-        column_widths = [24, 28, 24, 44, 14, 14, 18]
+        column_widths = [24, 28, 28, 24, 44, 14, 14, 18]
         for index, width in enumerate(column_widths, start=1):
             ws.column_dimensions[chr(64 + index)].width = width
 

@@ -2,7 +2,7 @@ from setup_database import get_connection
 class DirectorRepository:
 
     @staticmethod
-    def obtener_actividades_director_para_reporte(user_id, fecha_inicio=None, fecha_final=None, estado=None, unidad=None):
+    def obtener_actividades_director_para_reporte(user_id, fecha_inicio=None, fecha_final=None, estado=None, unidad=None, departamento=None):
         conexion = get_connection()
         cursor = conexion.cursor(dictionary=True)
 
@@ -18,6 +18,7 @@ class DirectorRepository:
         query = f'''
         SELECT
             u.name AS user_name,
+            d.name AS department,
             GROUP_CONCAT(DISTINCT un.name ORDER BY un.name SEPARATOR ', ') AS unit,
             CONCAT(c.code, ' - ', c.name) AS code,
             a.description,
@@ -25,6 +26,7 @@ class DirectorRepository:
             a.state
         FROM activities a
         LEFT JOIN users u ON u.id = a.user_id
+        LEFT JOIN departments d ON d.id = u.department_id
         LEFT JOIN types t ON t.id = a.type_id
         LEFT JOIN codes c ON c.id = t.code_id
         LEFT JOIN unit_user uu ON uu.user_id = u.id
@@ -44,8 +46,11 @@ class DirectorRepository:
         if unidad:
             query += " AND un.name = %s"
             params.append(unidad)
+        if departamento:
+            query += " AND d.name = %s"
+            params.append(departamento)
         query += '''
-        GROUP BY a.id, u.name, c.code, c.name, a.description, a.created_at, a.state
+        GROUP BY a.id, u.name, d.name, c.code, c.name, a.description, a.created_at, a.state
         ORDER BY a.created_at DESC
         '''
         cursor.execute(query, tuple(params))
@@ -151,10 +156,10 @@ class DirectorRepository:
 
 
     @staticmethod
-    def obtener_todas_actividades():
+    def obtener_todas_actividades(fecha_inicio: str = None, fecha_final: str = None, estado: str = None, unidad: str = None, departamento: str = None):
         conexion = get_connection()
         cursor = conexion.cursor(dictionary=True)
-        cursor.execute("""
+        query = """
             SELECT a.id, a.evidence_file, u.name AS user_name, d.name AS department, un.name AS unit,
                    CONCAT(c.code, ' - ', c.name) AS code, a.state, a.description, a.created_at, a.updated_at, a.observations
             FROM activities a
@@ -163,15 +168,35 @@ class DirectorRepository:
             LEFT JOIN types t ON t.id = a.type_id
             LEFT JOIN codes c ON c.id = t.code_id
             LEFT JOIN units un ON un.id = c.unit_id
-            ORDER BY a.created_at DESC
-        """)
+            WHERE 1=1
+        """
+        params = []
+        if fecha_inicio:
+            query += " AND DATE(a.created_at) >= %s"
+            params.append(fecha_inicio)
+        if fecha_final:
+            query += " AND DATE(a.created_at) <= %s"
+            params.append(fecha_final)
+        if estado:
+            query += " AND a.state = %s"
+            params.append(estado)
+        if unidad:
+            query += " AND un.name = %s"
+            params.append(unidad)
+        if departamento:
+            query += " AND d.name = %s"
+            params.append(departamento)
+
+        query += " ORDER BY a.created_at DESC"
+        
+        cursor.execute(query, tuple(params))
         actividades = cursor.fetchall()
         cursor.close()
         conexion.close()
         return {"status": "success", "data": actividades}
     
     @staticmethod
-    def obtener_actividades_director(user_id: int):
+    def obtener_actividades_director(user_id: int, fecha_inicio: str = None, fecha_final: str = None, estado: str = None, unidad: str = None, departamento: str = None):
         conexion = get_connection()
         cursor = conexion.cursor(dictionary=True)
         cursor.execute("SELECT unit_id FROM unit_user WHERE user_id = %s", (user_id,))
@@ -187,6 +212,7 @@ class DirectorRepository:
             cursor.close()
             conexion.close()
             return {"status": "success", "data": []}
+            
         formato_in_usuarios = ','.join(['%s'] * len(usuarios))
         query = f"""
             SELECT a.id, a.evidence_file, u.name AS user_name, d.name AS department, un.name AS unit,
@@ -198,9 +224,28 @@ class DirectorRepository:
             LEFT JOIN codes c ON c.id = t.code_id
             LEFT JOIN units un ON un.id = c.unit_id
             WHERE a.user_id IN ({formato_in_usuarios})
-            ORDER BY a.created_at DESC
         """
-        cursor.execute(query, tuple(usuarios))
+        params = list(usuarios)
+        
+        if fecha_inicio:
+            query += " AND DATE(a.created_at) >= %s"
+            params.append(fecha_inicio)
+        if fecha_final:
+            query += " AND DATE(a.created_at) <= %s"
+            params.append(fecha_final)
+        if estado:
+            query += " AND a.state = %s"
+            params.append(estado)
+        if unidad:
+            query += " AND un.name = %s"
+            params.append(unidad)
+        if departamento:
+            query += " AND d.name = %s"
+            params.append(departamento)
+            
+        query += " ORDER BY a.created_at DESC"
+        
+        cursor.execute(query, tuple(params))
         actividades = cursor.fetchall()
         cursor.close()
         conexion.close()
