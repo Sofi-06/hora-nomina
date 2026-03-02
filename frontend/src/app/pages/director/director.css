@@ -1,0 +1,153 @@
+.director-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+.director-header {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: white;
+  padding: 40px 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+.director-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: url('/assets/Universidad_Santo_Tomas_Seccional_Tunja.jpg') center center;
+  background-size: cover;
+  opacity: 0.08;
+  z-index: 1;
+}
+.director-header-content {
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.director-header-text { flex: 1; }
+.director-main-title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  opacity: 0.9;
+  color: #95a5a6;
+}
+.director-welcome-title {
+  font-size: 42px;
+  font-weight: 300;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+.director-name { color: #f39c12; font-weight: 600; }
+.director-date-display {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 8px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 260px;
+  font-weight: 500;
+}
+.director-calendar-icon { font-size: 18px; }
+.director-date-text { font-size: 16px; font-weight: 500; }
+.director-dashboard-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+.director-dashboard-loading, .director-dashboard-error {
+  font-size: 1.2rem;
+  color: #888;
+  margin: 32px 0;
+  text-align: center;
+}
+.director-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+.director-metric-card {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.08);
+  transition: box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.director-metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #34495e, #2c3e50);
+}
+.director-metric-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.director-metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+.director-metric-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #7f8c8d;
+  margin: 0;
+  line-height: 1.4;
+}
+.director-metric-icon {
+  font-size: 24px;
+  opacity: 0.7;
+  color: #7f8c8d;
+}
+.director-metric-value {
+  font-size: 48px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+.director-metric-change {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.director-metric-change.director-positive { color: #27ae60; }
+.director-metric-change.director-urgent { color: #e74c3c; }
+.director-arrow { font-size: 12px; font-weight: normal; }
+.director-metric-card:nth-child(1)::before { background: #34495e; }
+.director-metric-card:nth-child(2)::before { background: #5d6d7e; }
+.director-metric-card:nth-child(3)::before { background: #85929e; }
+.director-metric-card:nth-child(4)::before { background: #566573; }
+@media (max-width: 768px) {
+  .director-header-content { flex-direction: column; text-align: center; }
+  .director-welcome-title { font-size: 32px; }
+  .director-date-display { min-width: auto; width: 100%; justify-content: center; }
+  .director-metrics-grid { grid-template-columns: 1fr; gap: 20px; }
+  .director-dashboard-content { padding: 20px; }
+}
+@media (max-width: 480px) {
+  .director-header { padding: 30px 15px; }
+  .director-metric-card { padding: 20px; }
+  .director-metric-value { font-size: 36px; }
+  .director-welcome-title { font-size: 28px; }
+}

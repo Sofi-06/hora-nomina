@@ -20,7 +20,6 @@ def get_database_connection():
         )
         return conexion
     except Exception as e:
-        print(f"Error al conectar a la base de datos: {e}")
         return None
 
 def test_connection():
@@ -33,10 +32,8 @@ def test_connection():
             result = cursor.fetchone()
             cursor.close()
             conexion.close()
-            print("Conexión a base de datos exitosa")
             return True
         except Exception as e:
-            print(f"Error en test de conexión: {e}")
             if conexion:
                 conexion.close()
             return False

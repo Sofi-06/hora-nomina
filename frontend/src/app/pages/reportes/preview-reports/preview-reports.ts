@@ -1,4 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Auth, Usuario } from '../../../services/auth';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
@@ -30,16 +31,25 @@ export class PreviewReports implements OnInit {
   private readonly http: HttpClient;
   private readonly cdr: ChangeDetectorRef;
   private readonly route: ActivatedRoute;
+  private readonly auth: Auth;
 
   activities: Activity[] = [];
   private currentFilters: Record<string, string> = {};
   loading = false;
   error = '';
+  descargando = false;
+  usuario: Usuario | null = null;
+  role: string = '';
+  userId: number | null = null;
 
-  constructor(http: HttpClient, cdr: ChangeDetectorRef, route: ActivatedRoute) {
+  constructor(http: HttpClient, cdr: ChangeDetectorRef, route: ActivatedRoute, auth: Auth) {
     this.http = http;
     this.cdr = cdr;
     this.route = route;
+    this.auth = auth;
+    this.usuario = this.auth.getUsuarioActual();
+    this.role = (this.usuario?.role || '').toLowerCase();
+    this.userId = this.usuario?.id || null;
   }
 
   ngOnInit(): void {
@@ -59,17 +69,15 @@ export class PreviewReports implements OnInit {
         }
         return acc;
       }, {} as Record<string, string>);
-      
-      // Build query string from parameters
-      const queryString = Object.entries(this.currentFilters)
-        .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
-        .join('&');
 
-      const finalUrl = queryString 
-        ? `${this.apiUrl}/admin/activities?${queryString}`
-        : `${this.apiUrl}/admin/activities`;
+      let url = `${this.apiUrl}/admin/activities`;
+      let params: any = { ...this.currentFilters };
+      if (this.role === 'director' && this.userId) {
+        url = `${this.apiUrl}/director/activities`;
+        params = { ...params, user_id: this.userId, role: 'director' };
+      }
 
-      const response = await firstValueFrom(this.http.get<{ status: string; data: Activity[] }>(finalUrl));
+      const response = await firstValueFrom(this.http.get<{ status: string; data: Activity[] }>(url, { params }));
 
       if (response.status === 'success' && response.data) {
         this.activities = response.data;
@@ -87,12 +95,16 @@ export class PreviewReports implements OnInit {
 
   descargarExcel(): void {
     let params = new HttpParams();
-
     for (const [key, value] of Object.entries(this.currentFilters)) {
       params = params.set(key, value);
     }
-
-    this.http.get(`${this.apiUrl}/admin/reports/excel`, {
+    let url = `${this.apiUrl}/admin/reports/excel`;
+    if (this.role === 'director' && this.userId) {
+      url = `${this.apiUrl}/director/reports/excel`;
+      params = params.set('user_id', this.userId.toString());
+    }
+    this.descargando = true;
+    this.http.get(url, {
       params,
       responseType: 'blob'
     }).subscribe({
@@ -103,10 +115,13 @@ export class PreviewReports implements OnInit {
         anchor.download = `reporte_actividades_${new Date().toISOString().slice(0, 10)}.xlsx`;
         anchor.click();
         globalThis.URL.revokeObjectURL(downloadUrl);
+        this.descargando = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error descargando Excel:', err);
         this.error = 'No se pudo descargar el archivo Excel';
+        this.descargando = false;
         this.cdr.detectChanges();
       }
     });

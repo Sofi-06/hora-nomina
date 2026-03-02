@@ -29,10 +29,11 @@ interface ActivityItem {
   styleUrl: './docente.css'
 })
 export class Docente implements OnInit {
-  
+  creationBlocked = false;
+
   nombreUsuario: string = '';
   currentDate: string = '';
-  
+
   // Actividades
   activities: ActivityItem[] = [];
   filtered: ActivityItem[] = [];
@@ -53,17 +54,47 @@ export class Docente implements OnInit {
   private readonly apiUrl = 'http://localhost:8000';
 
   constructor(
-    private auth: Auth,
-    private http: HttpClient,
-    private cd: ChangeDetectorRef,
-    private router: Router
-  ) {}
+    private readonly auth: Auth,
+    private readonly http: HttpClient,
+    private readonly cd: ChangeDetectorRef,
+    private readonly router: Router
+  ) { }
 
   ngOnInit() {
+    this.creationBlocked = this.isCreationBlockedByDeadline();
+    setInterval(() => {
+      const blocked = this.isCreationBlockedByDeadline();
+      if (blocked !== this.creationBlocked) {
+        this.creationBlocked = blocked;
+        this.cd.detectChanges();
+      }
+    }, 60000);
     const usuario = this.auth.getUsuarioActual();
     this.nombreUsuario = usuario?.name || 'Docente';
     this.setCurrentDate();
     this.loadActivities();
+  }
+
+  isCreationBlockedByDeadline(): boolean {
+    // Usa deadline extendido si existe y solo resetea si es de un mes anterior
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+    let deadline: Date;
+    const stored = localStorage.getItem('extendedDeadline');
+
+    if (stored) {
+      const storedDate = new Date(stored);
+      // Si la fecha guardada es de un mes pasado (anterior al 1ero de este mes), resetear
+      if (storedDate < currentMonthStart) {
+        deadline = new Date(now.getFullYear(), now.getMonth(), 10, 23, 59, 59);
+        localStorage.setItem('extendedDeadline', deadline.toISOString());
+      } else {
+        deadline = storedDate;
+      }
+    } else {
+      deadline = new Date(now.getFullYear(), now.getMonth(), 10, 23, 59, 59);
+    }
+    return now > deadline;
   }
 
   private setCurrentDate(): void {
@@ -74,7 +105,7 @@ export class Docente implements OnInit {
       month: 'long',
       year: 'numeric'
     };
-    
+
     this.currentDate = now.toLocaleDateString('es-ES', options)
       .split(',')
       .map(part => part.trim())
@@ -132,7 +163,6 @@ export class Docente implements OnInit {
               observations: item?.observations ?? null
             }));
 
-            console.log('Actividades del docente cargadas:', this.activities);
             this.applyFilters();
             this.loading = false;
             this.cd.detectChanges();
@@ -149,13 +179,20 @@ export class Docente implements OnInit {
 
   applyFilters(): void {
     this.filtered = this.activities.filter(activity => {
-      const matchesSearch = !this.searchTerm || 
-        activity.code.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        activity.user_name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        activity.state.toLowerCase().includes(this.searchTerm.toLowerCase());
+      const searchTerm = this.searchTerm ?? '';
+      const dateFilter = this.dateFilter ?? '';
+      const code = activity.code ?? '';
+      const user_name = activity.user_name ?? '';
+      const state = activity.state ?? '';
+      const created_at = activity.created_at ?? '';
 
-      const matchesDate = !this.dateFilter || 
-        activity.created_at.startsWith(this.dateFilter);
+      const matchesSearch = !searchTerm ||
+        code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        state.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesDate = !dateFilter ||
+        created_at.startsWith(dateFilter);
 
       return matchesSearch && matchesDate;
     });
@@ -166,12 +203,12 @@ export class Docente implements OnInit {
 
   updatePagination(): void {
     this.totalPages = Math.ceil(this.filtered.length / this.pageSize);
-    
+
     const startIndex = (this.currentPage - 1) * this.pageSize;
     const endIndex = Math.min(startIndex + this.pageSize, this.filtered.length);
-    
+
     this.pagedActivities = this.filtered.slice(startIndex, endIndex);
-    
+
     this.pageStart = startIndex + 1;
     this.pageEnd = endIndex;
   }
@@ -209,7 +246,7 @@ export class Docente implements OnInit {
 
   formatRelativeUpdate(date: string): string {
     if (!date) return '-';
-    
+
     const now = new Date();
     const updated = new Date(date);
     const diffMs = now.getTime() - updated.getTime();
@@ -221,7 +258,7 @@ export class Docente implements OnInit {
     if (diffMins < 60) return `Hace ${diffMins} min`;
     if (diffHours < 24) return `Hace ${diffHours} h`;
     if (diffDays < 7) return `Hace ${diffDays} d`;
-    
+
     return `${updated.getDate()}/${updated.getMonth() + 1}/${updated.getFullYear()}`;
   }
 
@@ -245,7 +282,7 @@ export class Docente implements OnInit {
       alert('No hay archivo disponible');
       return;
     }
-    
+
     const link = document.createElement('a');
     link.href = `${this.apiUrl}/descargar/${id}`;
     link.download = archivo;

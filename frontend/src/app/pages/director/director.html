@@ -1,0 +1,77 @@
+<app-nav-component></app-nav-component>
+<div class="director-container">
+	<!-- Header igual que admin -->
+	<header class="director-header">
+		<div class="director-header-content">
+			<div class="director-header-text">
+				<h1 class="director-main-title">PANEL DE CONTROL ACADÉMICO</h1>
+				<h2 class="director-welcome-title">Bienvenido(a), <span class="director-name">{{ nombreUsuario }}</span></h2>
+			</div>
+			<div class="director-date-display">
+				<i class="fas fa-calendar-alt director-calendar-icon"></i>
+				<span class="director-date-text">{{ currentDate }}</span>
+			</div>
+		</div>
+	</header>
+
+	<main class="director-dashboard-content">
+		<div *ngIf="loading" class="director-dashboard-loading">Cargando métricas...</div>
+		<div *ngIf="error" class="director-dashboard-error">{{ error }}</div>
+
+		<div *ngIf="metrics" class="director-metrics-grid">
+			<!-- Total Usuarios 
+			<div class="director-metric-card">
+				<div class="director-metric-header">
+					<h3 class="director-metric-title">TOTAL USUARIOS</h3>
+					<i class="fas fa-users director-metric-icon"></i>
+				</div>
+				<div class="director-metric-value">{{ metrics.totalUsuarios | number }}</div>
+				<div class="director-metric-change director-positive">
+					<i class="fas fa-bell director-arrow"></i>
+					+{{ metrics.porcentajeUsuarios }}% este mes
+				</div>
+			</div>
+			-->
+
+			<!-- Total Actividades -->
+			<div class="director-metric-card">
+				<div class="director-metric-header">
+					<h3 class="director-metric-title">TOTAL ACTIVIDADES</h3>
+					<i class="fas fa-tasks director-metric-icon"></i>
+				</div>
+				<div class="director-metric-value">{{ metrics.totalActividades | number }}</div>
+				<div class="director-metric-change director-positive">
+					<i class="fas fa-bell director-arrow"></i>
+					+{{ metrics.porcentajeActividades }} esta semana
+				</div>
+			</div>
+
+			<!-- Entregas Pendientes -->
+			<div class="director-metric-card">
+				<div class="director-metric-header">
+					<h3 class="director-metric-title">ENTREGAS PENDIENTES</h3>
+					<i class="fas fa-clock director-metric-icon"></i>
+				</div>
+				<div class="director-metric-value">{{ metrics.entregasPendientes | number }}</div>
+				<div class="director-metric-change director-urgent">
+					<i class="fas fa-bell director-arrow"></i>
+					{{ metrics.vencenHoy }} vencen hoy
+				</div>
+			</div>
+
+			<!-- Entregas Aprobadas -->
+			<div class="director-metric-card">
+				<div class="director-metric-header">
+					<h3 class="director-metric-title">ENTREGAS APROBADAS</h3>
+					<i class="fas fa-check-circle director-metric-icon"></i>
+				</div>
+				<div class="director-metric-value">{{ metrics.entregasAprobadas | number }}</div>
+				<div class="director-metric-change director-positive">
+					<i class="fas fa-bell director-arrow"></i>
+					+{{ metrics.porcentajeAprobacion }}% aprobación
+				</div>
+			</div>
+		</div>
+	</main>
+</div>
+<app-footer></app-footer>

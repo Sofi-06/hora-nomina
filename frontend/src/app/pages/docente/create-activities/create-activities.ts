@@ -33,6 +33,8 @@ interface ActivityType {
   styleUrl: './create-activities.css',
 })
 export class CreateActivities implements OnInit {
+    creationDeadline: Date | null = null;
+    // creationBlocked = false; // Removed the creationBlocked variable
   isLoading = false;
   errorMessage = '';
   successMessage = '';
@@ -60,6 +62,8 @@ export class CreateActivities implements OnInit {
   ) {}
 
   ngOnInit(): void {
+        // Bloqueo de creación después de 5 minutos
+         // Removed the deadline logic
     this.setCurrentMonth();
     this.loadUnits();
     const usuario = this.auth.getUsuarioActual();

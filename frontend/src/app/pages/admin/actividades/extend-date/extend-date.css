@@ -1,3 +1,18 @@
+.btn-reset {
+  background: #f59e42;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 20px;
+  margin-right: auto;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-reset:hover {
+  background: #e07b1a;
+}
 .modal-overlay {
   position: fixed;
   top: 0;

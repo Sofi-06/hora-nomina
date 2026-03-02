@@ -20,7 +20,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from auth.auth import router as auth_router
 from routers.docente import router as docente_router
+from routers.director import router as director_router
 from baseDatos.database import get_database_connection
+from app.services.correosSMTP.correo import enviar_correo_cambio_estado
 
 load_dotenv()
 
@@ -31,13 +33,13 @@ UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 
 
 #Llamado de rutas para las consultas de los otros dos roles
-#app.include_router(director.router)
+app.include_router(director_router)
 app.include_router(docente_router)
 
 class CreateUserRequest(BaseModel):
     name: str
     email: str
-    password: Optional[str] = None  # Opcional para editar
+    password: Optional[str] = None  
     user_type: Literal["Admin", "Docente", "Director"]
     identification_type: Literal["CC", "CE"] = "CC"
     identification: str
@@ -54,15 +56,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# Incluir router
 app.include_router(auth_router)
 
 @app.get("/")
 def root():
     return {"message": "API de Seguimiento de CV de Docentes"}
 
-# 🔥 Endpoint de prueba real
 @app.get("/test-db")
 def test_db():
     try:
@@ -78,7 +77,7 @@ def test_db():
 
             return {
                 "status": "success",
-                "message": "✅ Conectado correctamente a MySQL",
+                "message": "Conectado correctamente a MySQL",
                 "database": database[0]
             }
         else:
@@ -174,18 +173,13 @@ def get_dashboard_metrics():
             "entregasAprobadas": entregasAprobadas,
             "porcentajeAprobacion": porcentajeAprobacion
         }
-        
-        print(f"✅ Dashboard metrics: {response_data}")
-        
+                
         return {
             "status": "success",
             "data": response_data
         }
 
     except Exception as e:
-        print(f"❌ Error obteniendo métricas: {e}")
-        import traceback
-        traceback.print_exc()
         return {
             "status": "error",
             "message": str(e),
@@ -241,18 +235,13 @@ def get_users():
         usuarios = cursor.fetchall()
         cursor.close()
         conexion.close()
-        
-        print(f"✅ Usuarios obtenidos: {len(usuarios)}")
-        
+               
         return {
             "status": "success",
             "data": usuarios
         }
     
     except Exception as e:
-        print(f"❌ Error obteniendo usuarios: {e}")
-        import traceback
-        traceback.print_exc()
         return {
             "status": "error",
             "message": str(e)
@@ -302,8 +291,6 @@ def search_users(query: str = ""):
         cursor.close()
         conexion.close()
         
-        print(f"✅ Busca completada: {len(usuarios)} resultados")
-        
         return {
             "status": "success",
             "data": usuarios,
@@ -311,9 +298,6 @@ def search_users(query: str = ""):
         }
     
     except Exception as e:
-        print(f"❌ Error buscando usuarios: {e}")
-        import traceback
-        traceback.print_exc()
         return {
             "status": "error",
             "message": str(e)
@@ -353,17 +337,12 @@ def activate_user(user_id: int):
         cursor.close()
         conexion.close()
         
-        print(f"✅ Usuario {user_id} activado")
-        
         return {
             "status": "success",
             "message": f"Usuario {user_id} activado correctamente"
         }
     
     except Exception as e:
-        print(f"❌ Error activando usuario: {e}")
-        import traceback
-        traceback.print_exc()
         return {
             "status": "error",
             "message": str(e)
@@ -403,17 +382,12 @@ def deactivate_user(user_id: int):
         cursor.close()
         conexion.close()
         
-        print(f"✅ Usuario {user_id} inactivado")
-        
         return {
             "status": "success",
             "message": f"Usuario {user_id} inactivado correctamente"
         }
     
     except Exception as e:
-        print(f"❌ Error inactivando usuario: {e}")
-        import traceback
-        traceback.print_exc()
         return {
             "status": "error",
             "message": str(e)
@@ -453,17 +427,12 @@ def delete_user(user_id: int):
         cursor.close()
         conexion.close()
         
-        print(f"✅ Usuario {user_id} eliminado")
-        
         return {
             "status": "success",
             "message": f"Usuario {user_id} eliminado correctamente"
         }
     
     except Exception as e:
-        print(f"❌ Error eliminando usuario: {e}")
-        import traceback
-        traceback.print_exc()
         return {
             "status": "error",
             "message": str(e)
@@ -497,7 +466,6 @@ def get_departments():
         }
 
     except Exception as e:
-        print(f"❌ Error obteniendo departamentos: {e}")
         return {
             "status": "error",
             "message": str(e)
@@ -532,7 +500,6 @@ def get_units():
         }
 
     except Exception as e:
-        print(f"❌ Error obteniendo unidades: {e}")
         return {
             "status": "error",
             "message": str(e)
@@ -613,7 +580,6 @@ def create_user(payload: CreateUserRequest):
         }
 
     except Exception as e:
-        print(f"❌ Error creando usuario: {e}")
         return {
             "status": "error",
             "message": str(e)
@@ -673,9 +639,6 @@ def get_user(user_id: int):
         }
     
     except Exception as e:
-        print(f"❌ Error obteniendo usuario: {e}")
-        import traceback
-        traceback.print_exc()
         return {
             "status": "error",
             "message": str(e)
@@ -782,16 +745,12 @@ def update_user(user_id: int, payload: CreateUserRequest):
         }
     
     except Exception as e:
-        print(f"❌ Error actualizando usuario: {e}")
-        import traceback
-        traceback.print_exc()
         return {
             "status": "error",
             "message": str(e)
         }
         
-        
-        # ===== ENDPOINTS PARA UNIDADES =====
+# ===== ENDPOINTS PARA UNIDADES =====
 
 @app.get("/admin/units")
 def get_admin_units():
@@ -829,7 +788,6 @@ def get_admin_units():
         }
 
     except Exception as e:
-        print(f"❌ Error obteniendo unidades: {e}")
         return {
             "status": "error",
             "message": str(e)
@@ -890,7 +848,6 @@ def get_unit(unit_id: int):
         }
     
     except Exception as e:
-        print(f"❌ Error obteniendo unidad: {e}")
         return {
             "status": "error",
             "message": str(e)
@@ -933,15 +890,12 @@ def delete_unit(unit_id: int):
         cursor.close()
         conexion.close()
         
-        print(f"✅ Unidad {unit_id} eliminada")
-        
         return {
             "status": "success",
             "message": f"Unidad {unit_id} eliminada correctamente"
         }
     
     except Exception as e:
-        print(f"❌ Error eliminando unidad: {e}")
         return {
             "status": "error",
             "message": str(e)
@@ -984,8 +938,6 @@ def create_unit(payload: dict):
                 cursor.close()
                 conexion.close()
         
-                print(f"✅ Unidad {unit_id} creada: {payload['name']}")
-        
                 return {
                     "status": "success",
                     "message": "Unidad creada correctamente",
@@ -993,7 +945,6 @@ def create_unit(payload: dict):
                 }
         
             except Exception as e:
-                print(f"❌ Error creando unidad: {e}")
                 return {
                     "status": "error",
                     "message": str(e)
@@ -1049,15 +1000,12 @@ def update_unit(unit_id: int, payload: dict):
         cursor.close()
         conexion.close()
 
-        print(f"✅ Unidad {unit_id} actualizada: {payload['name']}")
-
         return {
             "status": "success",
             "message": "Unidad actualizada correctamente"
         }
 
     except Exception as e:
-        print(f"❌ Error actualizando unidad: {e}")
         return {
             "status": "error",
             "message": str(e)
@@ -1103,9 +1051,6 @@ def get_admin_codes():
         }
 
     except Exception as e:
-        print(f"❌ Error obteniendo codigos: {e}")
-        import traceback
-        traceback.print_exc()
         return {
             "status": "error",
             "message": str(e)
@@ -1144,17 +1089,12 @@ def delete_code(code_id: int):
         cursor.close()
         conexion.close()
 
-        print(f"✅ Codigo {code_id} eliminado")
-
         return {
             "status": "success",
             "message": f"Codigo {code_id} eliminado correctamente"
         }
 
     except Exception as e:
-        print(f"❌ Error eliminando codigo: {e}")
-        import traceback
-        traceback.print_exc()
         return {
             "status": "error",
             "message": str(e)
@@ -1199,7 +1139,6 @@ def get_all_types():
         }
 
     except Exception as e:
-        print(f"❌ Error obteniendo tipos: {e}")
         return {
             "status": "error",
             "message": str(e)
@@ -1261,9 +1200,6 @@ def get_types_by_code(code_id: int):
         }
 
     except Exception as e:
-        print(f"❌ Error obteniendo tipos: {e}")
-        import traceback
-        traceback.print_exc()
         return {
             "status": "error",
             "message": str(e)
@@ -1444,7 +1380,8 @@ def update_code(code_id: int, payload: dict):
             "status": "error",
             "message": str(e)
         }  
-        
+       
+# ===== ENDPOINTS PARA DEPARTAMENTOS =====     
         
 @app.get("/admin/departments")
 def get_admin_departments():
@@ -1483,7 +1420,6 @@ def get_admin_departments():
         }
 
     except Exception as e:
-        print(f"❌ Error obteniendo departamentos: {e}")
         return {
             "status": "error",
             "message": str(e)
@@ -1704,7 +1640,7 @@ def delete_department(dept_id: int):
             "message": str(e)
         }
         
-        # ===== ENDPOINTS PARA ACTIVIDADES =====
+# ===== ENDPOINTS PARA ACTIVIDADES =====
         
 @app.get("/admin/activities")
 def get_admin_activities(
@@ -1725,8 +1661,7 @@ def get_admin_activities(
             }
 
         cursor = conexion.cursor(dictionary=True)
-        
-        # Base query with unit joins
+
         query = """
         SELECT
             a.id,
@@ -1788,7 +1723,6 @@ def get_admin_activities(
         }
 
     except Exception as e:
-        print(f"Error obteniendo actividades: {e}")
         return {
             "status": "error",
             "message": str(e)
@@ -1805,7 +1739,7 @@ def get_activity_by_id(activity_id: int):
         cur.execute("""
     SELECT
         a.id,
-        a.evidence_file,          -- <-- agrega esto
+        a.evidence_file,   
         u.name AS user_name,
         CONCAT(c.code, ' - ', c.name) AS code,
         a.hours AS dedicated_hours,
@@ -1850,8 +1784,19 @@ def get_activity_by_id(activity_id: int):
 @app.put("/admin/activities/{activity_id}/state")
 def update_activity_state(activity_id: int, payload: UpdateActivityStatePayload):
     conn = get_database_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(dictionary=True)
     try:
+        # Obtener información del usuario y la actividad para el correo
+        cur.execute("""
+            SELECT u.name, u.email, t.name as activity_name
+            FROM activities a
+            JOIN users u ON u.id = a.user_id
+            JOIN types t ON t.id = a.type_id
+            WHERE a.id = %s
+        """, (activity_id,))
+        info = cur.fetchone()
+
+        # Actualizar el estado
         cur.execute("""
             UPDATE activities
             SET state = %s,
@@ -1863,6 +1808,19 @@ def update_activity_state(activity_id: int, payload: UpdateActivityStatePayload)
 
         if cur.rowcount == 0:
             raise HTTPException(status_code=404, detail="Actividad no encontrada")
+
+        # Enviar el correo si se encontró la información
+        if info:
+            try:
+                enviar_correo_cambio_estado(
+                    destinatario=info['email'],
+                    nombre_usuario=info['name'],
+                    actividad_nombre=info['activity_name'],
+                    nuevo_estado=payload.state,
+                    observaciones=payload.observations
+                )
+            except Exception as e_mail:
+                pass
 
         return {"message": "Estado actualizado correctamente"}
     finally:
@@ -1900,8 +1858,6 @@ def descargar_archivo(id: int):
         # Carpetas organizadas por user_id
         ruta = os.path.join(UPLOAD_DIR, str(user_id), archivo)
 
-        print(f"Buscando archivo en: {ruta}")
-
         if not os.path.exists(ruta):
             raise HTTPException(status_code=404, detail=f"Archivo no encontrado en: {ruta}")
 
@@ -1916,7 +1872,6 @@ def descargar_archivo(id: int):
     except HTTPException:
         raise
     except Exception as e:
-        print("ERROR:", e)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -1971,7 +1926,6 @@ def visualizar_archivo(id: int):
     except HTTPException:
         raise
     except Exception as e:
-        print("ERROR visualizar:", e)
         raise HTTPException(status_code=500, detail=str(e))
     
     #====== ENDPOINTS PARA TIPOS =====
@@ -2024,8 +1978,6 @@ def create_type(payload: dict):
         cursor.close()
         conexion.close()
         
-        print(f"✅ Tipo {name} creado para código {code_id}")
-        
         return {
             "status": "success",
             "message": "Tipo creado correctamente",
@@ -2039,9 +1991,6 @@ def create_type(payload: dict):
         }
     
     except Exception as e:
-        print(f"❌ Error creando tipo: {e}")
-        import traceback
-        traceback.print_exc()
         return {
             "status": "error",
             "message": str(e)
@@ -2081,17 +2030,12 @@ def delete_type(type_id: int):
         cursor.close()
         conexion.close()
 
-        print(f"✅ Tipo {type_id} eliminado")
-
         return {
             "status": "success",
             "message": f"Tipo {type_id} eliminado correctamente"
         }
 
     except Exception as e:
-        print(f"❌ Error eliminando tipo: {e}")
-        import traceback
-        traceback.print_exc()
         return {
             "status": "error",
             "message": str(e)
@@ -2142,8 +2086,6 @@ def update_type(type_id: int, data: dict):
         cursor.close()
         conexion.close()
         
-        print(f"✅ Tipo {type_id} actualizado")
-        
         return {
             "status": "success",
             "message": f"Tipo actualizado correctamente",
@@ -2155,9 +2097,6 @@ def update_type(type_id: int, data: dict):
         }
     
     except Exception as e:
-        print(f"❌ Error actualizando tipo: {e}")
-        import traceback
-        traceback.print_exc()
         return {
             "status": "error",
             "message": str(e)
@@ -2184,7 +2123,6 @@ def get_activity_states():
         }
     
     except Exception as e:
-        print(f"❌ Error obteniendo estados: {e}")
         return {
             "status": "error",
             "message": str(e)
@@ -2300,21 +2238,30 @@ def download_reports_excel(
             7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
         }
 
+
+        import re
+        def limpiar_valor(valor):
+            if valor is None:
+                return "-"
+            # Solo permite caracteres imprimibles y comunes en español
+            return re.sub(r'[^\x20-\x7EáéíóúÁÉÍÓÚñÑüÜ ]', '', str(valor).replace('\n', ' ').replace('\r', ' '))[:1000]
+
         for item in actividades:
             created_at = item.get("created_at")
             fecha_envio = created_at.strftime("%d-%m-%Y") if created_at else "-"
             mes = month_names.get(created_at.month, "-") if created_at else "-"
 
-            ws.append([
-                item.get("user_name") or "-",
-                item.get("department") or "-",
-                item.get("unit") or "-",
-                item.get("code") or "-",
-                item.get("description") or "-",
+            fila = [
+                limpiar_valor(item.get("user_name")),
+                limpiar_valor(item.get("department")),
+                limpiar_valor(item.get("unit")),
+                limpiar_valor(item.get("code")),
+                limpiar_valor(item.get("description")),
                 fecha_envio,
                 mes,
-                item.get("state") or "-"
-            ])
+                limpiar_valor(item.get("state"))
+            ]
+            ws.append(fila)
 
         for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=1, max_col=8):
             for cell in row:
@@ -2341,7 +2288,6 @@ def download_reports_excel(
         )
 
     except Exception as e:
-        print(f"❌ Error generando Excel de reportes: {e}")
         return {
             "status": "error",
             "message": str(e)

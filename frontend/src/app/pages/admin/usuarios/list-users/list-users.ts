@@ -70,7 +70,6 @@ export class ListUsers implements OnInit, OnDestroy {
               this.cd.detectChanges();
             }
 
-            console.log('Usuarios cargados:', this.usuarios);
           } else {
             this.error = response.message || 'No se pudieron cargar los usuarios';
           }

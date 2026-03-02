@@ -8,6 +8,7 @@ from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from baseDatos.database import get_database_connection
+from app.services.correosSMTP.correo import enviar_correo_actividad
 
 router = APIRouter(
     prefix="/docente",
@@ -105,7 +106,6 @@ def get_docente_activities(
         }
 
     except Exception as e:
-        print(f"Error obteniendo actividades del docente: {e}")
         return {
             "status": "error",
             "message": str(e)
@@ -193,6 +193,42 @@ async def create_docente_activity(
         ))
 
         conexion.commit()
+
+        # Obtener información extra para el correo (nombre de usuario, email, nombre de actividad)
+        try:
+            cursor_info = conexion.cursor(dictionary=True)
+            # Query para obtener email, nombre del usuario, nombre del tipo de actividad, código y unidad
+            cursor_info.execute("""
+                SELECT 
+                    u.name as user_name, 
+                    u.email, 
+                    t.name as activity_name,
+                    c.name as code_name,
+                    un.name as unit_name
+                FROM users u
+                JOIN types t ON t.id = %s
+                JOIN codes c ON c.id = t.code_id
+                JOIN units un ON un.id = c.unit_id
+                WHERE u.id = %s
+            """, (type_id, user_id))
+            info = cursor_info.fetchone()
+            
+            if info:
+                enviar_correo_actividad(
+                    destinatario=info['email'],
+                    nombre_usuario=info['user_name'],
+                    actividad_nombre=info['activity_name'],
+                    horas=dedicated_hours,
+                    descripcion=description,
+                    unidad=info['unit_name'],
+                    codigo=info['code_name'],
+                    nombre_archivo=evidence_file.filename
+                )
+            cursor_info.close()
+        except Exception as e_mail:
+            pass
+            # No retornamos error para no fallar la creación de la actividad si solo falló el correo
+
         cursor.close()
         conexion.close()
 
@@ -201,7 +237,6 @@ async def create_docente_activity(
             "message": "Actividad creada correctamente"
         }
     except Exception as e:
-        print(f"❌ Error creando actividad: {e}")
         return {
             "status": "error",
             "message": str(e)
@@ -331,15 +366,7 @@ def get_docente_codes():
         }
 
     except Exception as e:
-        print(f"❌ Error obteniendo códigos: {e}")
         return {
-            "status": "error",
-            "message": str(e)
-        }
-
-    except Exception as e:
-          print(f"Error creating activity: {e}")
-    return {
             "status": "error",
             "message": str(e)
         }
@@ -381,7 +408,6 @@ def get_docente_types():
             }
 
         except Exception as e:
-            print(f"❌ Error obteniendo tipos: {e}")
             return {
                 "status": "error",
                 "message": str(e)

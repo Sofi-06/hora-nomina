@@ -1,52 +1,61 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavComponent } from '../../components/nav-component/nav-component';
-import { Auth } from '../../services/auth';
+import { Footer } from '../../components/footer/footer';
+import { Auth, Usuario } from '../../services/auth';
 
 @Component({
   selector: 'app-director',
-  imports: [CommonModule, NavComponent],
-  template: `
-    <app-nav-component></app-nav-component>
-    <div class="container">
-      <h1>Panel de Director</h1>
-      <p>Bienvenido, {{ nombreUsuario }}</p>
-      <div class="content">
-        <h2>Funciones de Director:</h2>
-        <ul>
-          <li>Gestión académica</li>
-          <li>Supervisión de docentes</li>
-          <li>Reportes institucionales</li>
-          <li>Administración de programas</li>
-        </ul>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .container {
-      padding: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    .content {
-      margin-top: 30px;
-    }
-    ul {
-      list-style-type: disc;
-      padding-left: 20px;
-    }
-    li {
-      margin-bottom: 10px;
-    }
-  `]
+  imports: [CommonModule, NavComponent, Footer],
+  templateUrl: './director.html',
+  styleUrls: ['./director.css']
 })
 export class Director implements OnInit {
-  nombreUsuario: string = '';
 
-  constructor(private auth: Auth) {}
+  nombreUsuario: string = '';
+  metrics: any = null;
+  loading: boolean = true;
+  error: string = '';
+  currentDate: string = '';
+
+  constructor(private auth: Auth, private cd: ChangeDetectorRef) {}
 
   ngOnInit() {
-    const usuario = this.auth.getUsuarioActual();
+    const usuario: Usuario | null = this.auth.getUsuarioActual();
     this.nombreUsuario = usuario?.name || '';
+    this.setCurrentDate();
+    if (usuario) {
+      this.auth.getDirectorDashboardMetrics(usuario.id).subscribe({
+        next: (resp) => {
+          this.metrics = resp.data;
+          this.loading = false;
+          this.cd.detectChanges();
+        },
+        error: (err) => {
+          this.error = 'No se pudieron cargar las métricas.';
+          this.loading = false;
+          this.cd.detectChanges();
+        }
+      });
+    } else {
+      this.error = 'No se encontró información de usuario.';
+      this.loading = false;
+      this.cd.detectChanges();
+    }
+  }
+
+  private setCurrentDate(): void {
+    const now = new Date();
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    };
+    this.currentDate = now.toLocaleDateString('es-ES', options)
+      .split(',')
+      .map(part => part.trim())
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(', ');
   }
 }
