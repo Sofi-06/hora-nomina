@@ -236,7 +236,6 @@ def enviar_correo_actividad(destinatario: str, nombre_usuario: str, actividad_no
             server.send_message(msg)
         return True
     except Exception as e:
-        print(f"❌ Error enviando correo de actividad: {e}")
         return False
 
 def enviar_correo_cambio_estado(destinatario: str, nombre_usuario: str, actividad_nombre: str, nuevo_estado: str, observaciones: str = None):
@@ -353,5 +352,4 @@ def enviar_correo_cambio_estado(destinatario: str, nombre_usuario: str, activida
             server.send_message(msg)
         return True
     except Exception as e:
-        print(f"❌ Error enviando correo de cambio de estado: {e}")
         return False

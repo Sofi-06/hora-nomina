@@ -52,7 +52,6 @@ def verificar_login(email: str, password: str):
         cursor.close()
 
         if not usuario:
-            print("❌ Usuario no encontrado")
             return None
 
         estado = usuario.get("state")
@@ -68,20 +67,18 @@ def verificar_login(email: str, password: str):
         hash_bd = usuario["password"].encode("utf-8")
         password_ingresada = password.encode("utf-8")
 
-        # 🔥 AQUÍ está la validación real
+
         if bcrypt.checkpw(password_ingresada, hash_bd):
             del usuario["password"]
             usuario.pop("state", None)
             return usuario
         else:
-            print("❌ Password incorrecta")
             return None
 
     except HTTPException:
         raise
 
     except Exception as e:
-        print("ERROR LOGIN:", e)
         return None
     finally:
         if conexion:
@@ -133,7 +130,6 @@ def forgot_password(request: ForgotPasswordRequest):
         cursor.close()
 
     except Exception as e:
-        print(f"❌ Error en base de datos forgot-password: {e}")
         raise HTTPException(
             status_code=500,
             detail={"status": "error", "mensaje": f"Error al procesar la solicitud: {str(e)}"}
@@ -165,17 +161,12 @@ def forgot_password(request: ForgotPasswordRequest):
             token=token
         )
 
-        print(f"✅ Correo de recuperación enviado a {usuario['email']}")
-
         return {
             "status": "success",
             "mensaje": "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña."
         }
 
     except Exception as e:
-        print(f"❌ Error enviando correo: {e}")
-        import traceback
-        traceback.print_exc()
         raise HTTPException(
             status_code=500,
             detail={"status": "error", "mensaje": f"Error al enviar el correo: {str(e)}"}
@@ -235,8 +226,6 @@ def reset_password(request: ResetPasswordRequest):
                 detail={"status": "error", "mensaje": "Usuario no encontrado."}
             )
 
-        print(f"✅ Contraseña actualizada para usuario ID: {user_id}")
-
         return {
             "status": "success",
             "mensaje": "Contraseña restablecida exitosamente."
@@ -245,9 +234,6 @@ def reset_password(request: ResetPasswordRequest):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ Error en reset-password: {e}")
-        import traceback
-        traceback.print_exc()
         raise HTTPException(
             status_code=500,
             detail={"status": "error", "mensaje": f"Error al restablecer la contraseña: {str(e)}"}

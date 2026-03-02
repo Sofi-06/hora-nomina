@@ -200,7 +200,6 @@ this.activity = {
       const a = document.createElement('a');
       a.href = url;
       a.download = nombre;  
-      console.log('Nombre archivo:', nombre);
       a.click();
       window.URL.revokeObjectURL(url);
     });

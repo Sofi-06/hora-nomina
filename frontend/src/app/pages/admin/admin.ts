@@ -72,7 +72,6 @@ export class Admin implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           if (response.status === 'success' && response.data) {
-            console.log('Métricas cargadas:', response.data);
             this.totalUsuarios = response.data.totalUsuarios;
             this.porcentajeUsuarios = response.data.porcentajeUsuarios;
             this.totalActividades = response.data.totalActividades;

@@ -106,7 +106,6 @@ def get_docente_activities(
         }
 
     except Exception as e:
-        print(f"Error obteniendo actividades del docente: {e}")
         return {
             "status": "error",
             "message": str(e)
@@ -227,7 +226,7 @@ async def create_docente_activity(
                 )
             cursor_info.close()
         except Exception as e_mail:
-            print(f"⚠️ Error al enviar correo de notificación: {e_mail}")
+            pass
             # No retornamos error para no fallar la creación de la actividad si solo falló el correo
 
         cursor.close()
@@ -238,7 +237,6 @@ async def create_docente_activity(
             "message": "Actividad creada correctamente"
         }
     except Exception as e:
-        print(f"❌ Error creando actividad: {e}")
         return {
             "status": "error",
             "message": str(e)
@@ -368,15 +366,7 @@ def get_docente_codes():
         }
 
     except Exception as e:
-        print(f"❌ Error obteniendo códigos: {e}")
         return {
-            "status": "error",
-            "message": str(e)
-        }
-
-    except Exception as e:
-          print(f"Error creating activity: {e}")
-    return {
             "status": "error",
             "message": str(e)
         }
@@ -418,7 +408,6 @@ def get_docente_types():
             }
 
         except Exception as e:
-            print(f"❌ Error obteniendo tipos: {e}")
             return {
                 "status": "error",
                 "message": str(e)

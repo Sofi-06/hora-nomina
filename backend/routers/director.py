@@ -129,7 +129,6 @@ def download_director_reports_excel(
         )
 
     except Exception as e:
-        print(f"❌ Error generando Excel de reportes director: {e}")
         return {
             "status": "error",
             "message": str(e)

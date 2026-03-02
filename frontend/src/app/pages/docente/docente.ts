@@ -163,7 +163,6 @@ export class Docente implements OnInit {
               observations: item?.observations ?? null
             }));
 
-            console.log('Actividades del docente cargadas:', this.activities);
             this.applyFilters();
             this.loading = false;
             this.cd.detectChanges();
