@@ -8,6 +8,7 @@ import { Router } from '@angular/router';
 import { NavComponent } from '../../../../components/nav-component/nav-component';
 import { Footer } from '../../../../components/footer/footer';
 import { ChangeDetectorRef } from '@angular/core';
+import { environment } from '../../../../../environments/environment.prod';
 
 interface Department {
   id: number;
@@ -48,7 +49,6 @@ export class CreateUser implements OnInit {
   // Errores de validación 
   fieldErrors: { [key: string]: string } = {};
 
-  private apiUrl = 'http://localhost:8000';
 
   constructor(
     private http: HttpClient,
@@ -62,7 +62,7 @@ export class CreateUser implements OnInit {
   }
 
   private loadDepartments(): void {
-    this.http.get<{ status: string; data: Department[] }>(`${this.apiUrl}/departments`).subscribe({
+    this.http.get<{ status: string; data: Department[] }>(`${environment.apiUrl}/departments`).subscribe({
       next: (response) => {
         this.departments = response.data;
         this.cd.detectChanges();
@@ -74,7 +74,7 @@ export class CreateUser implements OnInit {
   }
 
   private loadUnits(): void {
-    this.http.get<{ status: string; data: Unit[] }>(`${this.apiUrl}/units`).subscribe({
+    this.http.get<{ status: string; data: Unit[] }>(`${environment.apiUrl}/units`).subscribe({
       next: (response) => {
         this.units = response.data;
         this.cd.detectChanges();
@@ -297,7 +297,7 @@ export class CreateUser implements OnInit {
       unit_ids: this.unit_ids,
     };
 
-    this.http.post<any>(`${this.apiUrl}/admin/users`, payload).subscribe({
+    this.http.post<any>(`${environment.apiUrl}/admin/users`, payload).subscribe({
       next: (response) => {
         this.isLoading = false;
         if (response.status === 'success') {

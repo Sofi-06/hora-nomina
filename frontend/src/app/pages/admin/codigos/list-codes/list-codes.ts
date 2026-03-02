@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { NavComponent } from '../../../../components/nav-component/nav-component';
 import { Footer } from '../../../../components/footer/footer';
 import { RouterLink } from '@angular/router';
+import { environment } from '../../../../../environments/environment.prod';
 
 interface CodeItem {
   id: number;
@@ -27,7 +28,6 @@ export class ListCodes implements OnInit {
   searchTerm: string = '';
   loading = false;
   error = '';
-  private readonly apiUrl = 'http://localhost:8000';
 
   constructor(private readonly http: HttpClient, private readonly cdr: ChangeDetectorRef) {}
 
@@ -38,7 +38,7 @@ export class ListCodes implements OnInit {
   loadCodes(): void {
     this.loading = true;
     this.error = '';
-    this.http.get<any>(`${this.apiUrl}/admin/codes`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/admin/codes`).subscribe({
       next: (response: any) => {
         if (response.status === 'success' && response.data) {
           this.codes = response.data;
@@ -81,7 +81,7 @@ export class ListCodes implements OnInit {
       return;
     }
 
-    this.http.delete<any>(`${this.apiUrl}/admin/codes/${id}`).subscribe({
+    this.http.delete<any>(`${environment.apiUrl}/admin/codes/${id}`).subscribe({
       next: (response: any) => {
         if (response.status === 'success') {
           this.codes = this.codes.filter((c) => c.id !== id);

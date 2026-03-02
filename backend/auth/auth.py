@@ -117,61 +117,75 @@ def login(auth: Auth):
 
 @router.post("/forgot-password")
 def forgot_password(request: ForgotPasswordRequest):
-    """Genera un token JWT y envía un correo con el link de recuperación"""
+    """
+    Genera un token JWT y envía un correo con el link de recuperación.
+    Siempre devuelve status "success" para no revelar si el correo existe.
+    """
+
     conexion = None
     usuario = None
+
+    # ===============================
+    # BUSCAR USUARIO EN DB
+    # ===============================
     try:
         conexion = get_database_connection()
         cursor = conexion.cursor(dictionary=True)
-
-        # Buscar el usuario por email
-        cursor.execute("SELECT id, name, email FROM users WHERE email = %s", (request.email,))
+        cursor.execute(
+            "SELECT id, name, email FROM users WHERE email = %s",
+            (request.email,)
+        )
         usuario = cursor.fetchone()
         cursor.close()
-
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail={"status": "error", "mensaje": f"Error al procesar la solicitud: {str(e)}"}
-        )
+        print("Error BD:", str(e))
+        # No lanzamos 500, solo logueamos
     finally:
         if conexion:
             conexion.close()
 
+    # ===============================
+    # SI NO HAY USUARIO, igual devolvemos success
+    # ===============================
     if not usuario:
-        raise HTTPException(
-            status_code=404,
-            detail={"status": "error", "mensaje": "El correo no está registrado."}
-        )
+        return {
+            "status": "success",
+            "mensaje": "Si el correo está registrado, recibirás instrucciones."
+        }
 
+    # ===============================
+    # SI EXISTE, GENERAMOS TOKEN Y ENVIAMOS CORREO
+    # ===============================
     try:
-        # Generar token JWT
         payload = {
             "user_id": usuario["id"],
             "email": usuario["email"],
             "exp": datetime.now(timezone.utc) + timedelta(minutes=30),
             "type": "password_reset"
         }
+
         token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
-        # Enviar correo
-        enviar_correo_recuperacion(
+        enviado = enviar_correo_recuperacion(
             destinatario=usuario["email"],
             nombre_usuario=usuario["name"],
             token=token
         )
 
-        return {
-            "status": "success",
-            "mensaje": "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña."
-        }
+        if not enviado:
+            print("⚠️ Correo no enviado, pero no rompemos el endpoint")
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail={"status": "error", "mensaje": f"Error al enviar el correo: {str(e)}"}
-        )
+        print("Error correo:", str(e))
+        # Solo logueamos, no lanzamos 500
 
+    # ===============================
+    # DEVOLVEMOS SIEMPRE SUCCESS
+    # ===============================
+    return {
+        "status": "success",
+        "mensaje": "Si el correo está registrado, recibirás instrucciones."
+    }
 
 @router.post("/reset-password")
 def reset_password(request: ResetPasswordRequest):

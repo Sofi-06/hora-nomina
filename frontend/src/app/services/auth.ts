@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, throwError, timeout, catchError, TimeoutError } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
+import { environment } from '../../environments/environment.prod';
 
 export interface Usuario {
   id: number;
@@ -21,7 +22,6 @@ export interface LoginResponse {
   providedIn: 'root',
 })
 export class Auth {
-  private apiUrl = 'http://localhost:8000';
   private usuarioActual = new BehaviorSubject<Usuario | null>(null);
 
 
@@ -46,7 +46,7 @@ export class Auth {
   }
 
   login(email: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/`, { email, password }).pipe(
+    return this.http.post<LoginResponse>(`${environment.apiUrl}/auth/`, { email, password }).pipe(
       timeout(2000), // Timeout de solo 3 segundos
       catchError((error: any) => {
         console.error('Error en login:', error);
@@ -138,7 +138,7 @@ export class Auth {
 
 
   getDashboardMetrics(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/admin/dashboard-metrics`).pipe(
+    return this.http.get<any>(`${environment.apiUrl}/admin/dashboard-metrics`).pipe(
       timeout(5000),
       catchError((error: any) => {
         console.error('Error obteniendo métricas:', error);
@@ -148,7 +148,7 @@ export class Auth {
   }
 
   getDirectorDashboardMetrics(userId: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/director/dashboard-metrics`, {
+    return this.http.get<any>(`${environment.apiUrl}/director/dashboard-metrics`, {
       params: { user_id: userId },
     }).pipe(
       timeout(5000),
@@ -209,7 +209,7 @@ export class Auth {
   // ===============================
 
   forgotPassword(email: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/auth/forgot-password`, { email }).pipe(
+    return this.http.post<any>(`${environment.apiUrl}/auth/forgot-password`, { email }).pipe(
       timeout(15000), // 15 segundos porque el envío de correo puede tardar
       catchError((error: any) => {
         console.error('Error en forgot-password:', error);
@@ -226,7 +226,7 @@ export class Auth {
   }
 
   resetPassword(token: string, password: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/auth/reset-password`, { token, password }).pipe(
+    return this.http.post<any>(`${environment.apiUrl}/auth/reset-password`, { token, password }).pipe(
       timeout(10000),
       catchError((error: any) => {
         console.error('Error en reset-password:', error);

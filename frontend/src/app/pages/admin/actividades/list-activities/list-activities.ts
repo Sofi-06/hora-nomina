@@ -8,6 +8,7 @@ import { RouterLink } from '@angular/router';
 import { Archivo } from '../../../../archivo';
 import { ExtendDate } from '../extend-date/extend-date';
 import { Auth, Usuario } from '../../../../services/auth';
+import { environment } from '../../../../../environments/environment.prod';
 
 interface ActivityItem {
   id: number;
@@ -49,7 +50,6 @@ export class ListActivities implements OnInit {
   role: string = '';
   descargandoId: number | null = null;
 
-  private readonly apiUrl = 'http://localhost:8000';
 
   constructor(
     private readonly http: HttpClient,
@@ -80,7 +80,7 @@ export class ListActivities implements OnInit {
     return;
   }
 
-  this.http.get<any>(`http://localhost:8000/director/activities?user_id=${user_id}&role=${role}`)
+  this.http.get<any>(`${environment.apiUrl}/director/activities?user_id=${user_id}&role=${role}`)
     .subscribe({
       next: (response) => {
         if (response.status === 'success' && response.data) {

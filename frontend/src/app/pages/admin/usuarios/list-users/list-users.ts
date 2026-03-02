@@ -7,6 +7,7 @@ import { NavComponent   } from '../../../../components/nav-component/nav-compone
 import { Footer } from '../../../../components/footer/footer';
 import { ChangeDetectorRef } from '@angular/core';
 import { Router,  RouterLink } from '@angular/router';
+import { environment } from '../../../../../environments/environment.prod';
 
 
 interface Usuario {
@@ -38,7 +39,6 @@ export class ListUsers implements OnInit, OnDestroy {
   successMessage: string = '';
   pageSize: number = 20;
   currentPage: number = 1;
-  private apiUrl = 'http://localhost:8000';
   private subscription?: Subscription;
 
   constructor(private http: HttpClient, private cd: ChangeDetectorRef, private router: Router)  {}
@@ -55,7 +55,7 @@ export class ListUsers implements OnInit, OnDestroy {
       this.successMessage = '';
     }
     
-    this.http.get<any>(`${this.apiUrl}/admin/users`)
+    this.http.get<any>(`${environment.apiUrl}/admin/users`)
       .subscribe({
         next: (response) => {
           if (response.status === 'success' && response.data) {
@@ -100,7 +100,7 @@ export class ListUsers implements OnInit, OnDestroy {
   }
 
 activarUsuario(id: number): void {
-  this.http.put<any>(`${this.apiUrl}/admin/users/${id}/activate`, {})
+  this.http.put<any>(`${environment.apiUrl}/admin/users/${id}/activate`, {})
     .subscribe({
       next: (response) => {
         if (response.status === 'success') {
@@ -129,7 +129,7 @@ activarUsuario(id: number): void {
 
 
   inactivarUsuario(id: number): void {
-    this.http.put<any>(`${this.apiUrl}/admin/users/${id}/deactivate`, {})
+    this.http.put<any>(`${environment.apiUrl}/admin/users/${id}/deactivate`, {})
       .subscribe({
         next: (response) => {
           if (response.status === 'success') {
@@ -162,7 +162,7 @@ editarUsuario(id: number): void {
 eliminarUsuario(id: number): void {
   if (!confirm('¿Está seguro de que desea eliminar este usuario?')) return;
 
-  this.http.delete<any>(`${this.apiUrl}/admin/users/${id}`)
+  this.http.delete<any>(`${environment.apiUrl}/admin/users/${id}`)
     .subscribe({
       next: (response) => {
 

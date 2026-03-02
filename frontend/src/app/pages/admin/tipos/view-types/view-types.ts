@@ -6,6 +6,7 @@ import { NavComponent } from '../../../../components/nav-component/nav-component
 import { Footer } from '../../../../components/footer/footer';
 import { CreateType } from '../create-type/create-type';
 import { EditType } from '../edit-type/edit-type';
+import { environment } from '../../../../../environments/environment.prod';
 
 interface Type {
   id: number;
@@ -61,7 +62,7 @@ export class ViewTypes implements OnInit {
     this.error = '';
     this.types = [];
 
-    this.http.get<any>(`http://localhost:8000/admin/codes/${this.codeId}/types`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/admin/codes/${this.codeId}/types`).subscribe({
       next: (response) => {
         if (response.status === 'success' && response.data) {
           this.code = response.data.code;
@@ -119,7 +120,7 @@ export class ViewTypes implements OnInit {
       return;
     }
 
-    this.http.delete<any>(`http://localhost:8000/admin/types/${typeId}`).subscribe({
+    this.http.delete<any>(`${environment.apiUrl}/admin/types/${typeId}`).subscribe({
       next: (response) => {
         if (response.status === 'success') {
           this.types = this.types.filter(t => t.id !== typeId);

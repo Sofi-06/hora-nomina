@@ -13,8 +13,8 @@ load_dotenv()
 # ===============================
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USER = os.getenv("SMTP_USER", "campusvirtualsolicitud@gmail.com")
-SMTP_PASS = os.getenv("SMTP_PASS", "")
+SMTP_USER = os.getenv("SMTP_USER", "campusvirtualsolicitud@gmail.com").strip()
+SMTP_PASS = os.getenv("SMTP_PASS", "").strip()
 
 
 def enviar_correo_recuperacion(destinatario: str, nombre_usuario: str, token: str):
@@ -28,7 +28,7 @@ def enviar_correo_recuperacion(destinatario: str, nombre_usuario: str, token: st
     """
 
     # URL del frontend con el token
-    reset_link = f"http://localhost:4200/confirmPassword?token={token}"
+    reset_link = f"https://campusvirtual.santototunja.edu.co/horasnomina/confirmPassword?token={token}"
 
     msg = EmailMessage()
     msg["From"] = formataddr(("Campus Virtual - Recuperación", SMTP_USER))
@@ -67,7 +67,7 @@ def enviar_correo_recuperacion(destinatario: str, nombre_usuario: str, token: st
                         <tr>
                             <td align="center" style="padding: 20px 0;">
                                 <a href="{reset_link}" 
-                                   style="background: linear-gradient(135deg, #2c5282, #3182ce); 
+                                   style="background: #5D6166; 
                                           color: #ffffff; 
                                           text-decoration: none; 
                                           padding: 14px 40px; 
@@ -290,7 +290,7 @@ def enviar_correo_cambio_estado(destinatario: str, nombre_usuario: str, activida
                     <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                             <td align="center" style="padding: 20px 0;">
-                                <a href="http://localhost:4200/login" 
+                                <a href="https://campusvirtual.santototunja.edu.co/horasnomina/" 
                                    style="background: linear-gradient(135deg, #2c5282, #3182ce); 
                                           color: #ffffff; 
                                           text-decoration: none; 
@@ -336,7 +336,7 @@ def enviar_correo_cambio_estado(destinatario: str, nombre_usuario: str, activida
         f"Nuevo estado: {nuevo_estado}\n"
         f"{obs_text}\n"
         f"Por favor, ingresa al portal del docente para revisar los detalles:\n"
-        f"http://localhost:4200/login\n\n"
+        f"https://campusvirtual.santototunja.edu.co/horasnomina/\n\n"
         f"Gracias por usar el Campus Virtual."
     )
     msg.add_alternative(body_html, subtype="html")

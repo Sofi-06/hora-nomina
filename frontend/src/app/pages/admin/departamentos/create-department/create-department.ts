@@ -2,6 +2,7 @@ import { Component, Output, EventEmitter, ChangeDetectorRef } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment.prod';
 
 @Component({
   selector: 'app-create-department',
@@ -17,7 +18,6 @@ export class CreateDepartment {
   loading = false;
   error: string | null = null;
   successMessage: string | null = null;
-  private apiUrl = 'http://localhost:8000';
 
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
 
@@ -31,7 +31,7 @@ export class CreateDepartment {
     this.error = null;
     this.successMessage = null;
 
-    this.http.post<any>(`${this.apiUrl}/admin/departments`, { name: this.name.trim() }).subscribe({
+    this.http.post<any>(`${environment.apiUrl}/admin/departments`, { name: this.name.trim() }).subscribe({
       next: (response) => {
         if (response.status === 'success') {
           this.successMessage = 'Departamento creado correctamente';

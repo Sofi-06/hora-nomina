@@ -6,6 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { NavComponent } from '../../../components/nav-component/nav-component';
 import { Footer } from '../../../components/footer/footer';
+import { environment } from '../../../../environments/environment.prod';
 
 interface Activity {
   id: number;
@@ -27,7 +28,6 @@ interface Activity {
   styleUrl: './preview-reports.css',
 })
 export class PreviewReports implements OnInit {
-  public readonly apiUrl = 'http://localhost:8000';
   private readonly http: HttpClient;
   private readonly cdr: ChangeDetectorRef;
   private readonly route: ActivatedRoute;
@@ -70,10 +70,10 @@ export class PreviewReports implements OnInit {
         return acc;
       }, {} as Record<string, string>);
 
-      let url = `${this.apiUrl}/admin/activities`;
+      let url = `${environment.apiUrl}/admin/activities`;
       let params: any = { ...this.currentFilters };
       if (this.role === 'director' && this.userId) {
-        url = `${this.apiUrl}/director/activities`;
+        url = `${environment.apiUrl}/director/activities`;
         params = { ...params, user_id: this.userId, role: 'director' };
       }
 
@@ -98,9 +98,9 @@ export class PreviewReports implements OnInit {
     for (const [key, value] of Object.entries(this.currentFilters)) {
       params = params.set(key, value);
     }
-    let url = `${this.apiUrl}/admin/reports/excel`;
+    let url = `${environment.apiUrl}/admin/reports/excel`;
     if (this.role === 'director' && this.userId) {
-      url = `${this.apiUrl}/director/reports/excel`;
+      url = `${environment.apiUrl}/director/reports/excel`;
       params = params.set('user_id', this.userId.toString());
     }
     this.descargando = true;
