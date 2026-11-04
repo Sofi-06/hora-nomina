@@ -75,6 +75,7 @@ export class EditUser implements OnInit {
           this.identification_type = user.identification_type;
           this.identification = user.identification;
           this.gender = user.gender;
+          this.state = user.state || 'Activo';
           this.department_id = user.department_id || null;
           this.unit_ids = user.unit_ids || [];
           this.isLoadingUser = false;

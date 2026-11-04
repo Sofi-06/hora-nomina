@@ -100,6 +100,8 @@ export class ListUsers implements OnInit, OnDestroy {
   }
 
 activarUsuario(id: number): void {
+  this.error = '';
+  this.successMessage = '';
   this.http.put<any>(`${environment.apiUrl}/admin/users/${id}/activate`, {})
     .subscribe({
       next: (response) => {
@@ -110,13 +112,16 @@ activarUsuario(id: number): void {
             usuario.state = 'Activo';
           }
 
-          this.successMessage = 'Usuario activado correctamente';
+          this.successMessage = response.message || 'Usuario activado correctamente';
           this.cd.detectChanges();
 
           setTimeout(() => {
             this.successMessage = '';
             this.cd.detectChanges(); 
           }, 2000);
+        } else {
+          this.error = response.message || 'No se pudo activar el usuario';
+          this.cd.detectChanges();
         }
       },
       error: (error) => {
@@ -129,6 +134,8 @@ activarUsuario(id: number): void {
 
 
   inactivarUsuario(id: number): void {
+    this.error = '';
+    this.successMessage = '';
     this.http.put<any>(`${environment.apiUrl}/admin/users/${id}/deactivate`, {})
       .subscribe({
         next: (response) => {
@@ -139,12 +146,15 @@ activarUsuario(id: number): void {
               this.cd.detectChanges();
             }
             
-          this.error = 'Usuario inactivado correctamente';
+          this.successMessage = response.message || 'Usuario inactivado correctamente';
           this.cd.detectChanges();
           setTimeout(() => {
-            this.error = '';
-            this.cd.detectChanges(); 
-          }, 2000);
+            this.successMessage = '';
+            this.cd.detectChanges();
+          }, 3000);
+          } else {
+            this.error = response.message || 'No se pudo inactivar el usuario';
+            this.cd.detectChanges();
           }
         },
         error: (error) => {
@@ -162,6 +172,9 @@ editarUsuario(id: number): void {
 eliminarUsuario(id: number): void {
   if (!confirm('¿Está seguro de que desea eliminar este usuario?')) return;
 
+  this.error = '';
+  this.successMessage = '';
+
   this.http.delete<any>(`${environment.apiUrl}/admin/users/${id}`)
     .subscribe({
       next: (response) => {
@@ -170,18 +183,21 @@ eliminarUsuario(id: number): void {
           this.usuarios = this.usuarios.filter(u => u.id !== id);
           this.usuariosFiltered = this.usuariosFiltered.filter(u => u.id !== id);
           this.updatePagedUsuarios();
-          this.successMessage = 'Usuario eliminado correctamente';
+          this.successMessage = response.message || 'Usuario eliminado correctamente';
           this.cd.detectChanges();
           
           setTimeout(() => {
             this.successMessage = '';
             this.cd.detectChanges();
           }, 3000);
+        } else {
+          this.error = response.message || 'No se pudo eliminar el usuario';
+          this.cd.detectChanges();
         }
       },
       error: (error) => {
-        this.error = 'Error al eliminar el usuario';
-        this.cd.markForCheck();
+        this.error = error?.error?.message || 'Error al eliminar el usuario';
+        this.cd.detectChanges();
       }
     });
 }
