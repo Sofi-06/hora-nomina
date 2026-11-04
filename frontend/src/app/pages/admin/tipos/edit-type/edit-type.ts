@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment.prod';
 
 @Component({
   selector: 'app-edit-type',
@@ -49,7 +50,7 @@ export class EditType implements OnInit, OnChanges {
       name: this.nombre.trim()
     };
     
-    this.http.put(`http://localhost:8000/admin/types/${this.typeId}`, payload).subscribe({
+    this.http.put(`${environment.apiUrl}/admin/types/${this.typeId}`, payload).subscribe({
       next: (response: any) => {
         if (response.status === 'success') {
           this.typeUpdated.emit(response.type);

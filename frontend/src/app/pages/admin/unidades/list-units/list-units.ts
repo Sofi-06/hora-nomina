@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { CreateUnit } from '../create-unit/create-unit';
 import { EditUnit } from '../edit-unit/edit-unit';
+import { environment } from '../../../../../environments/environment.prod';
 
 interface Unit {
   id: number;
@@ -26,7 +27,6 @@ export class ListUnits implements OnInit {
   showCreateModal = false;
   showEditModal = false;
   selectedUnitId: number | null = null;
-  private apiUrl = 'http://localhost:8000';
 
   constructor(
     private http: HttpClient,
@@ -40,7 +40,7 @@ export class ListUnits implements OnInit {
   loadUnidades(): void {
     this.loading = true;
     this.error = null;
-    this.http.get<any>(`${this.apiUrl}/admin/units`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/admin/units`).subscribe({
       next: (response: any) => {
         if (response.status === 'success') {
           this.unidades = response.data;
@@ -94,7 +94,7 @@ export class ListUnits implements OnInit {
 
   eliminarUnidad(id: number): void {
     if (confirm('¿Estás seguro de que deseas eliminar esta unidad?')) {
-      this.http.delete<any>(`${this.apiUrl}/admin/units/${id}`).subscribe({
+      this.http.delete<any>(`${environment.apiUrl}/admin/units/${id}`).subscribe({
         next: (response: any) => {
           if (response.status === 'success') {
             this.unidades = this.unidades.filter((u) => u.id !== id);

@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 import { NavComponent } from '../../../../components/nav-component/nav-component';
 import { Footer } from '../../../../components/footer/footer';
+import { environment } from '../../../../../environments/environment.prod';
 
 interface Unit {
   id: number;
@@ -33,7 +34,6 @@ export class EditCode implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  private apiUrl = 'http://localhost:8000';
 
   constructor(
     private http: HttpClient,
@@ -56,7 +56,7 @@ export class EditCode implements OnInit {
   }
 
   private loadUnits(): void {
-    this.http.get<{ status: string; data: Unit[] }>(`${this.apiUrl}/units`).subscribe({
+    this.http.get<{ status: string; data: Unit[] }>(`${environment.apiUrl}/units`).subscribe({
       next: (response) => {
         if (response.status === 'success' && response.data) {
           this.units = response.data;
@@ -73,7 +73,7 @@ export class EditCode implements OnInit {
   }
 
   private loadCode(): void {
-    this.http.get<any>(`${this.apiUrl}/admin/codes/${this.codeId}`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/admin/codes/${this.codeId}`).subscribe({
       next: (response) => {
         if (response.status === 'success' && response.data) {
           const item = response.data;
@@ -137,7 +137,7 @@ export class EditCode implements OnInit {
       unit_id: this.unit_id,
     };
 
-    this.http.put<any>(`${this.apiUrl}/admin/codes/${this.codeId}`, payload).subscribe({
+    this.http.put<any>(`${environment.apiUrl}/admin/codes/${this.codeId}`, payload).subscribe({
       next: (response) => {
         this.isLoading = false;
 

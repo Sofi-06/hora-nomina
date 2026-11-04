@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { NavComponent } from '../../../../components/nav-component/nav-component';
 import { Footer } from '../../../../components/footer/footer';
+import { environment } from '../../../../../environments/environment.prod';
 
 interface Unit {
   id: number;
@@ -30,7 +31,6 @@ export class CreateCode implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  private apiUrl = 'http://localhost:8000';
 
   constructor(
     private http: HttpClient,
@@ -43,7 +43,7 @@ export class CreateCode implements OnInit {
   }
 
   private loadUnits(): void {
-    this.http.get<{ status: string; data: Unit[] }>(`${this.apiUrl}/units`).subscribe({
+    this.http.get<{ status: string; data: Unit[] }>(`${environment.apiUrl}/units`).subscribe({
       next: (response) => {
         if (response.status === 'success' && response.data) {
           this.units = response.data;
@@ -101,7 +101,7 @@ export class CreateCode implements OnInit {
       unit_id: this.unit_id,
     };
 
-    this.http.post<any>(`${this.apiUrl}/admin/codes`, payload).subscribe({
+    this.http.post<any>(`${environment.apiUrl}/admin/codes`, payload).subscribe({
       next: (response) => {
         this.isLoading = false;
 

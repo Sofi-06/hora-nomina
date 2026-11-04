@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectorRef } fro
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment.prod';
 
 @Component({
   selector: 'app-edit-department',
@@ -19,7 +20,6 @@ export class EditDepartment implements OnInit {
   loadingData = true;
   error: string | null = null;
   successMessage: string | null = null;
-  private apiUrl = 'http://localhost:8000';
 
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
 
@@ -29,7 +29,7 @@ export class EditDepartment implements OnInit {
 
   cargarDepartamento(): void {
     this.loadingData = true;
-    this.http.get<any>(`${this.apiUrl}/admin/departments/${this.departmentId}`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/admin/departments/${this.departmentId}`).subscribe({
       next: (response) => {
         if (response.status === 'success') {
           this.name = response.data.name;
@@ -57,7 +57,7 @@ export class EditDepartment implements OnInit {
     this.error = null;
     this.successMessage = null;
 
-    this.http.put<any>(`${this.apiUrl}/admin/departments/${this.departmentId}`, { name: this.name.trim() }).subscribe({
+    this.http.put<any>(`${environment.apiUrl}/admin/departments/${this.departmentId}`, { name: this.name.trim() }).subscribe({
       next: (response) => {
         if (response.status === 'success') {
           this.successMessage = 'Departamento actualizado correctamente';

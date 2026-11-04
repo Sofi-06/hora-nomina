@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment.prod';
 
 @Component({
   selector: 'app-create-type',
@@ -47,7 +48,7 @@ export class CreateType {
     this.loading = true;
     this.error = '';
 
-    this.http.post<any>(`http://localhost:8000/admin/types`, {
+    this.http.post<any>(`${environment.apiUrl}/admin/types`, {
       name: this.name.trim(),
       code_id: this.codeId
     }).subscribe({

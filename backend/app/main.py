@@ -56,6 +56,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+class MethodOverrideMiddleware:
+    """
+    Permite que Apache (que bloquea PUT/PATCH/DELETE) reciba estas operaciones
+    como POST usando el header X-HTTP-Method-Override.
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and scope["method"] == "POST":
+            headers = dict(scope.get("headers") or [])
+            override = headers.get(b"x-http-method-override", b"").decode().upper()
+            if override in ("PUT", "PATCH", "DELETE"):
+                scope["method"] = override
+        await self.app(scope, receive, send)
+
+
+app.add_middleware(MethodOverrideMiddleware)
+
 app.include_router(auth_router)
 
 @app.get("/")

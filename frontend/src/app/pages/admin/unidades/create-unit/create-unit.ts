@@ -2,6 +2,7 @@ import { Component, Output, EventEmitter, ChangeDetectorRef } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment.prod';
 
 @Component({
   selector: 'app-create-unit',
@@ -18,7 +19,6 @@ export class CreateUnit {
   error: string | null = null;
   successMessage: string | null = null;
 
-  private apiUrl = 'http://localhost:8000';
 
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
 
@@ -37,7 +37,7 @@ export class CreateUnit {
       name: this.name.trim()
     };
 
-    this.http.post<any>(`${this.apiUrl}/admin/units`, payload).subscribe({
+    this.http.post<any>(`${environment.apiUrl}/admin/units`, payload).subscribe({
       next: (response: any) => {
         if (response.status === 'success') {
           this.successMessage = 'Unidad creada correctamente';

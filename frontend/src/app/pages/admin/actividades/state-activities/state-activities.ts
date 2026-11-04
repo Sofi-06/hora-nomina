@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { NavComponent } from '../../../../components/nav-component/nav-component';
 import { Footer } from '../../../../components/footer/footer';
 import { Archivo } from '../../../../archivo';
+import { environment } from '../../../../../environments/environment.prod';
 
 @Component({
   selector: 'app-state-activities',
@@ -20,7 +21,6 @@ export class StateActivities implements OnInit {
       // Si el mes viene como 'Enero 2026', solo devolver 'Enero'
       return monthText.split(' ')[0];
     }
-  private apiUrl = 'http://localhost:8000';
 
   activityId!: number;
   loading = false;
@@ -61,7 +61,7 @@ export class StateActivities implements OnInit {
     this.loading = true;
     this.error = '';
 
-    this.http.get<any>(`${this.apiUrl}/admin/activities/${this.activityId}`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/admin/activities/${this.activityId}`).subscribe({
       next: (res) => {
         const data = res?.data ?? res;
 this.activity = {
@@ -96,7 +96,7 @@ this.activity = {
     this.error = '';
 
     this.http
-      .put(`${this.apiUrl}/admin/activities/${this.activityId}/state`, {
+      .put(`${environment.apiUrl}/admin/activities/${this.activityId}/state`, {
         state: this.activity.state,
         observations: this.activity.observations || '',
       })

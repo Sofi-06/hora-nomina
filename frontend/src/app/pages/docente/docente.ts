@@ -6,6 +6,7 @@ import { Router, RouterLink } from '@angular/router';
 import { NavComponent } from '../../components/nav-component/nav-component';
 import { Footer } from '../../components/footer/footer';
 import { Auth } from '../../services/auth';
+import { environment } from '../../../environments/environment.prod';
 
 interface ActivityItem {
   id: number;
@@ -51,7 +52,6 @@ export class Docente implements OnInit {
   pageStart = 1;
   pageEnd = 1;
 
-  private readonly apiUrl = 'http://localhost:8000';
 
   constructor(
     private readonly auth: Auth,
@@ -145,7 +145,7 @@ export class Docente implements OnInit {
       return;
     }
 
-    this.http.get<any>(`${this.apiUrl}/docente/activities?user_id=${userId}`)
+    this.http.get<any>(`${environment.apiUrl}/docente/activities?user_id=${userId}`)
       .subscribe({
         next: (response) => {
           if (response.status === 'success' && response.data) {
@@ -284,7 +284,7 @@ export class Docente implements OnInit {
     }
 
     const link = document.createElement('a');
-    link.href = `${this.apiUrl}/descargar/${id}`;
+    link.href = `${environment.apiUrl}/descargar/${id}`;
     link.download = archivo;
     link.click();
   }
@@ -301,7 +301,7 @@ export class Docente implements OnInit {
 
     if (confirm('¿Seguro que deseas eliminar esta actividad?')) {
 
-      this.http.delete(`${this.apiUrl}/docente/activities/${id}`).subscribe({
+      this.http.delete(`${environment.apiUrl}/docente/activities/${id}`).subscribe({
         next: () => {
           this.activities = this.activities.filter(a => a.id !== id);
           this.applyFilters();

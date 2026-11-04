@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { NavComponent } from '../../../components/nav-component/nav-component';
 import { Footer } from '../../../components/footer/footer';
 import { Auth } from '../../../services/auth';
+import { environment } from '../../../../environments/environment.prod';
 
 interface Unit {
   id: number;
@@ -51,7 +52,6 @@ export class CreateActivities implements OnInit {
   activityTypes: ActivityType[] = [];
 
   currentMonth = '';
-  private apiUrl = 'http://localhost:8000';
   private userId: number | null = null;
 
   constructor(
@@ -77,7 +77,7 @@ export class CreateActivities implements OnInit {
   }
 
   private loadUnits(): void {
-    this.http.get<{ status: string; data: Unit[] }>(`${this.apiUrl}/units`).subscribe({
+    this.http.get<{ status: string; data: Unit[] }>(`${environment.apiUrl}/units`).subscribe({
       next: (response) => {
         if (response.status === 'success' && Array.isArray(response.data)) {
           this.units = response.data;
@@ -98,7 +98,7 @@ export class CreateActivities implements OnInit {
       this.codes = [];
       return;
     }
-    this.http.get<{ status: string; data: Code[] }>(`${this.apiUrl}/docente/codes`).subscribe({
+    this.http.get<{ status: string; data: Code[] }>(`${environment.apiUrl}/docente/codes`).subscribe({
       next: (response) => {
         if (response.status === 'success' && Array.isArray(response.data)) {
           this.codes = response.data.filter(code => code.unit_id === this.selectedUnit);
@@ -124,7 +124,7 @@ export class CreateActivities implements OnInit {
       this.activityTypes = [];
       return;
     }
-    this.http.get<{ status: string; data: ActivityType[] }>(`${this.apiUrl}/docente/types`).subscribe({
+    this.http.get<{ status: string; data: ActivityType[] }>(`${environment.apiUrl}/docente/types`).subscribe({
       next: (response) => {
         if (response.status === 'success' && Array.isArray(response.data)) {
           this.activityTypes = response.data.filter(type => type.code_id === this.selectedCode);
@@ -160,7 +160,7 @@ export class CreateActivities implements OnInit {
 
 
   private loadActivityTypes(): void {
-    this.http.get<{ status: string; data: ActivityType[] }>(`${this.apiUrl}/docente/types`).subscribe({
+    this.http.get<{ status: string; data: ActivityType[] }>(`${environment.apiUrl}/docente/types`).subscribe({
       next: (response) => {
         if (response.status === 'success' && Array.isArray(response.data)) {
           this.activityTypes = response.data;
@@ -246,7 +246,7 @@ export class CreateActivities implements OnInit {
       formData.append('evidence_file', this.selectedFile, this.selectedFile.name);
     }
 
-    this.http.post<any>(`${this.apiUrl}/docente/activities`, formData).subscribe({
+    this.http.post<any>(`${environment.apiUrl}/docente/activities`, formData).subscribe({
       next: (response) => {
         this.isLoading = false;
 

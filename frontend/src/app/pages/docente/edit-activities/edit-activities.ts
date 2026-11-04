@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
 import { NavComponent } from '../../../components/nav-component/nav-component';
 import { Footer } from '../../../components/footer/footer';
 import { Auth } from '../../../services/auth';
-
+import { environment } from '../../../../environments/environment.prod';
 interface Unit {
   id: number;
   name: string;
@@ -44,7 +44,7 @@ export class EditActivities implements OnInit {
             this.codes = [];
             return;
           }
-          this.http.get<{ status: string; data: Code[] }>(`${this.apiUrl}/docente/codes`).subscribe({
+          this.http.get<{ status: string; data: Code[] }>(`${environment.apiUrl}/docente/codes`).subscribe({
             next: (response) => {
               if (response.status === 'success' && Array.isArray(response.data)) {
                 this.codes = response.data.filter(code => code.unit_id === this.selectedUnit);
@@ -70,7 +70,7 @@ export class EditActivities implements OnInit {
             this.activityTypes = [];
             return;
           }
-          this.http.get<{ status: string; data: ActivityType[] }>(`${this.apiUrl}/docente/types`).subscribe({
+          this.http.get<{ status: string; data: ActivityType[] }>(`${environment.apiUrl}/docente/types`).subscribe({
             next: (response) => {
               if (response.status === 'success' && Array.isArray(response.data)) {
                 this.activityTypes = response.data.filter(type => type.code_id === this.selectedCode);
@@ -108,7 +108,7 @@ export class EditActivities implements OnInit {
     loadActivityAndPrefill(id: number): void {
       this.isLoading = true;
       // 1. Cargar la actividad
-      this.http.get<any>(`${this.apiUrl}/docente/activities/${id}`).subscribe({
+      this.http.get<any>(`${environment.apiUrl}/docente/activities/${id}`).subscribe({
         next: (res) => {
           const data = res?.data ?? res;
           // Guardar los valores a preseleccionar
@@ -122,21 +122,21 @@ export class EditActivities implements OnInit {
           this.codeValue = data.code_value ?? null;
           this.codeName = data.code_name ?? null;
           // 2. Cargar todas las unidades
-          this.http.get<{ status: string; data: Unit[] }>(`${this.apiUrl}/units`).subscribe({
+          this.http.get<{ status: string; data: Unit[] }>(`${environment.apiUrl}/units`).subscribe({
             next: (unitRes) => {
               if (unitRes.status === 'success' && Array.isArray(unitRes.data)) {
                 this.units = unitRes.data;
                 this.selectedUnit = unitId;
                 this.cd.detectChanges();
                 // 3. Cargar los códigos filtrados por unidad
-                this.http.get<{ status: string; data: Code[] }>(`${this.apiUrl}/docente/codes`).subscribe({
+                this.http.get<{ status: string; data: Code[] }>(`${environment.apiUrl}/docente/codes`).subscribe({
                   next: (codeRes) => {
                     if (codeRes.status === 'success' && Array.isArray(codeRes.data)) {
                       this.codes = codeRes.data.filter(code => code.unit_id === unitId);
                       this.selectedCode = codeId;
                       this.cd.detectChanges();
                       // 4. Cargar los tipos filtrados por código
-                      this.http.get<{ status: string; data: ActivityType[] }>(`${this.apiUrl}/docente/types`).subscribe({
+                      this.http.get<{ status: string; data: ActivityType[] }>(`${environment.apiUrl}/docente/types`).subscribe({
                         next: (typeRes) => {
                           if (typeRes.status === 'success' && Array.isArray(typeRes.data)) {
                             this.activityTypes = typeRes.data.filter(type => type.code_id === codeId);
@@ -192,7 +192,7 @@ export class EditActivities implements OnInit {
     codeId: number | null = null;
     loadActivity(id: number): void {
       this.isLoading = true;
-      this.http.get<any>(`${this.apiUrl}/docente/activities/${id}`).subscribe({
+      this.http.get<any>(`${environment.apiUrl}/docente/activities/${id}`).subscribe({
         next: (res) => {
           const data = res?.data ?? res;
           this.selectedUnit = data.unit_id ?? null;
@@ -236,7 +236,7 @@ export class EditActivities implements OnInit {
     }
 
     loadUnits(): void {
-      this.http.get<{ status: string; data: Unit[] }>(`${this.apiUrl}/units`).subscribe({
+      this.http.get<{ status: string; data: Unit[] }>(`${environment.apiUrl}/units`).subscribe({
         next: (response) => {
           if (response.status === 'success' && response.data) {
             this.units = response.data;
@@ -253,7 +253,7 @@ export class EditActivities implements OnInit {
     }
 
     loadActivityTypes(): void {
-      this.http.get<{ status: string; data: ActivityType[] }>(`${this.apiUrl}/docente/types`).subscribe({
+      this.http.get<{ status: string; data: ActivityType[] }>(`${environment.apiUrl}/docente/types`).subscribe({
         next: (response) => {
           if (response.status === 'success' && Array.isArray(response.data)) {
             this.activityTypes = response.data;
@@ -282,7 +282,7 @@ export class EditActivities implements OnInit {
       if (this.selectedFile) {
         formData.append('evidence_file', this.selectedFile);
       }
-      this.http.put(`${this.apiUrl}/docente/activities/${this.activityId}`, formData).subscribe({
+      this.http.put(`${environment.apiUrl}/docente/activities/${this.activityId}`, formData).subscribe({
         next: () => {
           this.successMessage = 'Actividad actualizada correctamente';
           this.isLoading = false;
@@ -312,7 +312,6 @@ export class EditActivities implements OnInit {
   activityTypes: ActivityType[] = [];
 
   currentMonth = '';
-  private readonly apiUrl = 'http://localhost:8000';
   private userId: number | null = null;
 
   constructor(

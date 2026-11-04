@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { NavComponent } from '../../components/nav-component/nav-component';
 import { Footer } from '../../components/footer/footer';
 import { RouterLink, Router } from '@angular/router';
+import { environment } from '../../../environments/environment.prod';
 
 @Component({
   selector: 'app-reportes',
@@ -14,7 +15,6 @@ import { RouterLink, Router } from '@angular/router';
   styleUrl: './reportes.css',
 })
 export class Reportes implements OnInit {
-  private readonly apiUrl = 'http://localhost:8000';
   private readonly http: HttpClient;
   private readonly cdr: ChangeDetectorRef;
   private readonly router: Router;
@@ -54,9 +54,9 @@ export class Reportes implements OnInit {
     this.error = '';
 
     try {
-      const departments$ = this.http.get<any>(`${this.apiUrl}/admin/departments`);
-      const units$ = this.http.get<any>(`${this.apiUrl}/admin/units`);
-      const states$ = this.http.get<any>(`${this.apiUrl}/admin/activity-states`);
+      const departments$ = this.http.get<any>(`${environment.apiUrl}/admin/departments`);
+      const units$ = this.http.get<any>(`${environment.apiUrl}/admin/units`);
+      const states$ = this.http.get<any>(`${environment.apiUrl}/admin/activity-states`);
 
       const [deptsResponse, unitsResponse, statesResponse] = await Promise.all([
         firstValueFrom(departments$),

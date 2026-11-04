@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../environments/environment.prod';
 
 @Injectable({
   providedIn: 'root',
@@ -12,7 +13,7 @@ export class Archivo {
   descargarArchivo(id: number): Observable<Blob> {
 
     return this.http.get(
-      `http://localhost:8000/descargar/${id}`,
+      `${environment.apiUrl}/descargar/${id}`,
       {
         responseType: 'blob'
       }
@@ -23,7 +24,7 @@ export class Archivo {
   visualizarArchivo(id: number): Observable<Blob> {
 
     return this.http.get(
-      `http://localhost:8000/visualizar/${id}`,
+      `${environment.apiUrl}/visualizar/${id}`,
       {
         responseType: 'blob'
       }

@@ -6,6 +6,7 @@ import { NavComponent } from '../../../../components/nav-component/nav-component
 import { Footer } from '../../../../components/footer/footer';
 import { CreateDepartment } from '../create-department/create-department';
 import { EditDepartment } from '../edit-department/edit-department';
+import { environment } from '../../../../../environments/environment.prod';
 
 interface Department {
   id: number;
@@ -29,7 +30,6 @@ export class ListDepartments implements OnInit {
   showCreateModal = false;
   showEditModal = false;
   selectedDepartmentId: number | null = null;
-  private apiUrl = 'http://localhost:8000';
 
   constructor(
     private http: HttpClient,
@@ -43,7 +43,7 @@ export class ListDepartments implements OnInit {
   loadDepartments(): void {
     this.loading = true;
     this.error = '';
-    this.http.get<any>(`${this.apiUrl}/admin/departments`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/admin/departments`).subscribe({
       next: (response) => {
         if (response.status === 'success' && response.data) {
           this.departments = response.data;
@@ -100,7 +100,7 @@ export class ListDepartments implements OnInit {
 
   eliminarDepartamento(id: number): void {
     if (!confirm('¿Estás seguro de que deseas eliminar este departamento?')) return;
-    this.http.delete<any>(`${this.apiUrl}/admin/departments/${id}`).subscribe({
+    this.http.delete<any>(`${environment.apiUrl}/admin/departments/${id}`).subscribe({
       next: (response) => {
         if (response.status === 'success') {
           this.departments = this.departments.filter((d) => d.id !== id);

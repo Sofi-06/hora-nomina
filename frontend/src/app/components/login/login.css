@@ -6,7 +6,7 @@
 /* Sección izquierda */
 .image-section {
   flex: 1.5;
-  background-image: url('/assets/Login.jpg');
+  background-image: url('https://campusvirtual.santototunja.edu.co/app/archivo/Login.jpg');
   background-size: cover;
   background-position: center;
   position: relative;
@@ -138,6 +138,10 @@
 }
 
 input[type="email"]:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px #fafafa inset !important;
+  border-radius: 25px;
+}
+input[type="password"]:-webkit-autofill {
   -webkit-box-shadow: 0 0 0 30px #fafafa inset !important;
   border-radius: 25px;
 }

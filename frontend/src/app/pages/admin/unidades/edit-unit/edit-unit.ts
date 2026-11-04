@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectorRef } fro
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment.prod';
 
 @Component({
   selector: 'app-edit-unit',
@@ -20,7 +21,6 @@ export class EditUnit implements OnInit {
   error: string | null = null;
   successMessage: string | null = null;
 
-  private apiUrl = 'http://localhost:8000';
 
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
 
@@ -30,7 +30,7 @@ export class EditUnit implements OnInit {
 
   cargarUnidad(): void {
     this.loadingData = true;
-    this.http.get<any>(`${this.apiUrl}/admin/units/${this.unitId}`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/admin/units/${this.unitId}`).subscribe({
       next: (response: any) => {
         if (response.status === 'success') {
           this.name = response.data.name;
@@ -66,7 +66,7 @@ export class EditUnit implements OnInit {
       name: this.name.trim()
     };
 
-    this.http.put<any>(`${this.apiUrl}/admin/units/${this.unitId}`, payload).subscribe({
+    this.http.put<any>(`${environment.apiUrl}/admin/units/${this.unitId}`, payload).subscribe({
       next: (response: any) => {
         if (response.status === 'success') {
           this.successMessage = 'Unidad actualizada correctamente';
